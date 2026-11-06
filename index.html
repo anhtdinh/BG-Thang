@@ -1,0 +1,861 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Báo giá thang máy</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: 3 cột — danh sách bước (trái), nội dung bước (giữa), tóm tắt giá luôn hiện (phải). Điện thoại: xếp dọc. */
+:root{
+  --bg:#f3f4f5; --surface:#fff; --ink:#1b2328; --muted:#5d6a72; --line:#dde2e5;
+  --accent:#0d6b6e; --accent-ink:#fff; --accent-soft:#dff0f0; --neg:#b3402a; --pos:#1b7a4b; --warn-bg:#fff4d6;
+  --font:'Be Vietnam Pro',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12171a; --surface:#1b2227; --ink:#e8edef; --muted:#9aa8b0; --line:#2e383e;
+  --accent:#4cc0c3; --accent-ink:#0b1a1b; --accent-soft:#16363a; --neg:#ff8d73; --pos:#5fd392; --warn-bg:#3a3316; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171a; --surface:#1b2227; --ink:#e8edef; --muted:#9aa8b0; --line:#2e383e;
+  --accent:#4cc0c3; --accent-ink:#0b1a1b; --accent-soft:#16363a; --neg:#ff8d73; --pos:#5fd392; --warn-bg:#3a3316; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.5;
+  padding-block:16px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1240px;margin:0 auto}
+header.top{display:flex;justify-content:space-between;align-items:baseline;gap:8px 24px;flex-wrap:wrap;margin-bottom:16px}
+h1{font-size:22px;margin:0;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:13px}
+.app{display:grid;grid-template-columns:200px minmax(0,1fr) 340px;gap:20px;align-items:start}
+nav.steps{position:sticky;top:12px;display:flex;flex-direction:column;gap:2px}
+nav.steps button{all:unset;cursor:pointer;display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:6px;color:var(--muted);font-weight:500}
+nav.steps button:hover{background:var(--surface)}
+nav.steps button:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+nav.steps button .n{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font:600 12px var(--mono);flex:none}
+nav.steps button.on{background:var(--surface);color:var(--ink);box-shadow:inset 3px 0 0 var(--accent)}
+nav.steps button.on .n{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+nav.steps button.done .n{border-color:var(--accent);color:var(--accent)}
+main.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:22px;min-width:0}
+main.panel h2{font-size:18px;margin:0 0 4px}
+h4.sg{font-size:14px;margin:18px 0 6px;font-weight:600}
+main.panel h3{font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:26px 0 8px;font-weight:600}
+.lead{color:var(--muted);margin:0 0 16px;max-width:65ch}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.cards:has(>:nth-child(3):last-child){grid-template-columns:repeat(3,minmax(0,1fr))}
+.cards:has(>:nth-child(3):last-child) .card{padding-left:10px;padding-right:10px}
+.cards:has(>:nth-child(3):last-child) .card b,.cards:has(>:nth-child(3):last-child) .card .p{overflow-wrap:anywhere}
+.card{all:unset;box-sizing:border-box;cursor:pointer;border:1.5px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.card:hover{border-color:var(--muted)}
+.card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.card.on{border-color:var(--accent);background:var(--accent-soft)}
+.card b{font-weight:600}.card span{font-size:13px;color:var(--muted)}
+.card .p{font:500 14px var(--mono);color:var(--ink);margin-top:4px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.stepper{display:inline-flex;align-items:center;border:1.5px solid var(--line);border-radius:8px;overflow:hidden}
+.stepper button{all:unset;cursor:pointer;width:44px;height:44px;text-align:center;font-size:20px}
+.stepper button:hover{background:var(--accent-soft)}
+.stepper output{min-width:64px;text-align:center;font:600 20px var(--mono)}
+dl.spec{margin:14px 0 0;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+dl.spec .sr{display:grid;grid-template-columns:150px minmax(0,1fr);gap:4px 16px;padding:11px 14px;border-bottom:1px solid var(--line);align-items:baseline}
+dl.spec .sr:last-child{border-bottom:0}
+dl.spec dt{color:var(--muted);font-size:13px}
+dl.spec dd{margin:0;font-weight:600;font-size:14.5px;overflow-wrap:anywhere}
+dl.spec dd small{display:block;font-weight:400;color:var(--muted);font-size:12.5px}
+dl.spec .sr.price{background:var(--accent-soft)}
+dl.spec .sr.price dd{font:600 20px var(--mono)}
+@media (max-width:520px){dl.spec .sr{grid-template-columns:1fr}}
+.note{background:var(--warn-bg);border-radius:6px;padding:9px 12px;font-size:13px;margin:12px 0}
+.items{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.it{display:grid;grid-template-columns:22px minmax(0,1fr) auto auto;gap:4px 12px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer}
+.it:last-child{border-bottom:0}
+.it:hover{background:var(--bg)}
+.it.on{background:var(--accent-soft)}
+.it input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
+.it .nm{min-width:0;font-size:14px}
+.it .pr{font:500 13px var(--mono);white-space:nowrap;text-align:right}
+.it .pr.neg{color:var(--neg)} .it .pr.pos{color:var(--pos)}
+.it .un{color:var(--muted);font-size:12px;white-space:nowrap}
+.qb{width:30px;height:30px;border-radius:8px;border:1px solid var(--border,#888);background:var(--surface,transparent);color:inherit;font-size:18px;line-height:1;cursor:pointer;padding:0}
+.it .q input[type=number]{text-align:center;width:64px;-moz-appearance:textfield}
+.it .q{grid-column:2 / -1;display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+input[type=number],input[type=text],select{font:inherit;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:7px 10px;min-height:38px;max-width:100%}
+input[type=number]{width:84px;font-family:var(--mono)}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.form label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.form input{width:100%;color:var(--ink)}
+.nav2{display:flex;justify-content:space-between;gap:10px;margin-top:24px}
+.btn{all:unset;box-sizing:border-box;cursor:pointer;padding:10px 18px;border-radius:8px;font-weight:600;border:1.5px solid var(--line);text-align:center}
+.btn:hover{border-color:var(--muted)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.pri:hover{filter:brightness(1.08)}
+aside.sum{position:sticky;top:12px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
+aside.sum h2{font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px}
+.ln{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.ln .v{font:500 12.5px var(--mono);text-align:right;white-space:nowrap}
+.ln .v.neg{color:var(--neg)}
+.ln small{color:var(--muted);grid-column:1/-1;font-size:12px}
+.tot{margin-top:10px;display:flex;flex-direction:column;gap:4px}
+.tot .r{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+.tot .r span:last-child{font-family:var(--mono)}
+.tot .g{border-top:2px solid var(--ink);padding-top:8px;margin-top:4px;font-weight:700;font-size:16px}
+.tot .g span:last-child{font-size:18px}
+.sumbtns{display:flex;gap:8px;margin-top:12px}
+.sumbtns .btn{flex:1;padding:9px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+td.r,th.r{text-align:right;font-family:var(--mono);white-space:nowrap}
+td.neg{color:var(--neg)}
+.empty{color:var(--muted);font-size:13px;padding:6px 0}
+@media (max-width:1020px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  nav.steps{position:static;flex-direction:row;overflow-x:auto;gap:4px;padding-bottom:4px}
+  nav.steps button{white-space:nowrap}
+  nav.steps button.on{box-shadow:inset 0 -3px 0 var(--accent)}
+  aside.sum{position:static}
+}
+@media (max-width:520px){main.panel{padding:16px}.it{grid-template-columns:22px minmax(0,1fr)}.it .pr,.it .un{grid-column:2;text-align:left}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+:root{color-scheme:light}
+html{-webkit-text-size-adjust:100%}
+body{margin:0}
+[hidden]{display:none!important}
+#print-area{display:none}
+@media print{
+ @page{size:A4;margin:14mm}
+ html,body{background:#fff!important;color:#111!important}
+ body>.wrap{display:none!important}
+ body{padding:0!important}
+ #print-area{display:block;font:10.5pt/1.45 'Be Vietnam Pro',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;color:#111}
+ #print-area .pa-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+ #print-area h1{font-size:20pt;margin:0;color:#0d6b6e}
+ #print-area .pa-meta{text-align:right;font-size:9pt;color:#555}
+ #print-area h2{font-size:9.5pt;letter-spacing:.06em;text-transform:uppercase;color:#0d6b6e;margin:16px 0 4px}
+ #print-area table{width:100%;border-collapse:collapse}
+ #print-area th,#print-area td{padding:4px 6px;border-bottom:.5pt solid #ccd3d6;text-align:left;vertical-align:top}
+ #print-area .kv th{width:150px;font-weight:400;color:#555;text-transform:none;letter-spacing:0;font-size:inherit}
+ #print-area .lines thead th{background:#0d6b6e;color:#fff;font-size:8.5pt}
+ #print-area .lines tr{break-inside:avoid}
+ #print-area .lines small{display:block;color:#666;font-size:8pt}
+ #print-area .r{text-align:right;white-space:nowrap}
+ #print-area .tot{width:60%;margin-left:auto;margin-top:10px}
+ #print-area .tot td{border:0}
+ #print-area .tot .g td{border-top:1.5pt solid #111;font-weight:700;font-size:12pt;color:#0d6b6e}
+ #print-area ul{margin:4px 0 0;padding-left:18px;font-size:9pt;color:#444}
+}
+
+</style></head><body>
+
+<div class="wrap">
+  <header class="top">
+    <div><h1>Báo giá thang máy</h1><div class="sub">Giá nhà máy VPTECH Hà Nam, bảng giá 2026, đã gồm VAT, giao tại nhà máy.</div></div>
+    <div class="row"><input type="text" id="open-id" placeholder="Mã báo giá (BG-…) hoặc mã chia sẻ (BGC1.…)" autocomplete="off" list="saved-ids" style="width:min(300px,100%)"><datalist id="saved-ids"></datalist><button class="btn" id="open-btn" type="button">Mở báo giá</button><button class="btn" id="reset" type="button">Báo giá mới</button></div>
+  </header>
+  <div class="sub" id="open-msg" role="status" style="margin:-8px 0 12px"></div>
+  <div class="app">
+    <nav class="steps" id="nav" aria-label="Các bước báo giá"></nav>
+    <main class="panel" id="main"></main>
+    <aside class="sum" id="sum" aria-live="polite"></aside>
+  </div>
+</div>
+
+<script>
+const ITEMS=[{"id": "vach0", "cat": "vach", "name": "Vách cabin từ Inox dày 1.2 mm sang inox dày 1.5 mm", "unit": "Bộ", "price": 6500000}, {"id": "vach1", "cat": "vach", "name": "Thay tấm vách lớn trong cabin từ inox gương trắng sang inox sọc nhuyễn", "unit": "Tấm", "price": -500000}, {"id": "vach2", "cat": "vach", "name": "Thay tấm vách lớn trong cabin từ Inox gương trắng sang inox gương trắng ăn mòn hoa văn", "unit": "Tấm", "price": 2000000}, {"id": "vach3", "cat": "vach", "name": "Thay tấm vách lớn trong cabin từ Inox gương trắng sang inox gương vàng", "unit": "Tấm", "price": 1000000}, {"id": "vach4", "cat": "vach", "name": "Thay tấm vách lớn trong cabin từ Inox gương trắng sang inox gương đen", "unit": "Tấm", "price": 2000000}, {"id": "vach5", "cat": "vach", "name": "Thay tấm vách lớn trong cabin từ Inox gương trắng sang inox gương đồng", "unit": "Tấm", "price": 2000000}, {"id": "vach6", "cat": "vach", "name": "Thay tấm vách lớn trong cabin từ Inox gương trắng sang inox gương vàng ăn mòn hoa văn", "unit": "Tấm", "price": 2500000}, {"id": "vach7", "cat": "vach", "name": "Thay tấm vách lớn trong cabin từ Inox gương trắng sang inox gương đen ăn mòn hoa văn", "unit": "Tấm", "price": 3000000}, {"id": "vach8", "cat": "vach", "name": "Thay tấm vách lớn trong cabin từ Inox gương trắng sang inox gương đồng ăn mòn hoa văn", "unit": "Tấm", "price": 3000000}, {"id": "vach9", "cat": "vach", "name": "Vách cabin các tấm góc inox sọc trắng xen 3 tấm giữa inox gương trắng ăn mòn hoa văn", "unit": "Bộ", "price": 6000000}, {"id": "vach10", "cat": "vach", "name": "Vách cabin các tấm góc inox sọc trắng xen 3 tấm giữa inox gương vàng ăn mòn hoa văn", "unit": "Bộ", "price": 7500000}, {"id": "vach11", "cat": "vach", "name": "Vách cabin các tấm góc inox sọc trắng xen 3 tấm giữa inox gương đen ăn mòn hoa văn", "unit": "Bộ", "price": 9000000}, {"id": "vach12", "cat": "vach", "name": "Vách cabin các tấm góc inox sọc trắng xen 3 tấm giữa inox gương đồng ăn mòn hoa văn", "unit": "Bộ", "price": 9000000}, {"id": "vach13", "cat": "vach", "name": "Vách cabin các tấm góc inox gương trắng xen 3 tấm giữa inox gương trắng ăn mòn hoa văn", "unit": "Bộ", "price": 7000000}, {"id": "vach14", "cat": "vach", "name": "Vách cabin các tấm góc inox gương trắng xen 3 tấm giữa inox gương vàng ăn mòn hoa văn", "unit": "Bộ", "price": 8500000}, {"id": "vach15", "cat": "vach", "name": "Vách cabin các tấm góc inox gương trắng xen 3 tấm giữa inox gương đen ăn mòn hoa văn", "unit": "Bộ", "price": 9500000}, {"id": "vach16", "cat": "vach", "name": "Vách cabin các tấm góc inox gương trắng xen 3 tấm giữa inox gương đồng ăn mòn hoa văn", "unit": "Bộ", "price": 9500000}, {"id": "vach17", "cat": "vach", "name": "Vách cabin các tấm góc inox gương vàng xen 3 tấm giữa inox gương vàng ăn mòn hoa văn", "unit": "Bộ", "price": 10000000}, {"id": "vach18", "cat": "vach", "name": "Vách cabin các tấm góc inox gương đen xen 3 tấm giữa inox gương đen ăn mòn hoa văn", "unit": "Bộ", "price": 11000000}, {"id": "vach19", "cat": "vach", "name": "Vách cabin các tấm góc inox gương đồng xen 3 tấm giữa inox gương đồng ăn mòn hoa văn", "unit": "Bộ", "price": 11000000}, {"id": "vach20", "cat": "vach", "name": "Vách cabin các tấm góc inox sọc vàng xen 3 tấm giữa inox gương vàng ăn mòn hoa văn", "unit": "Bộ", "price": 10000000}, {"id": "vach21", "cat": "vach", "name": "Vách cabin các tấm góc inox sọc đen xen 3 tấm giữa inox gương đen ăn mòn hoa văn", "unit": "Bộ", "price": 11000000}, {"id": "vach22", "cat": "vach", "name": "Vách cabin các tấm góc inox sọc đồng xen 3 tấm giữa inox gương đồng ăn mòn hoa văn", "unit": "Bộ", "price": 11000000}, {"id": "vach23", "cat": "vach", "name": "Vách cabin các tấm góc sọc trắng ăn mòn hoa văn xen 3 tấm giữa inox gương trắng", "unit": "Bộ", "price": 3000000}, {"id": "vach24", "cat": "vach", "name": "Vách cabin các tấm góc sọc vàng ăn mòn hoa văn xen 3 tấm giữa inox gương trắng", "unit": "Bộ", "price": 4500000}, {"id": "vach25", "cat": "vach", "name": "Vách cabin các tấm góc sọc đen ăn mòn hoa văn xen 3 tấm giữa inox gương trắng", "unit": "Bộ", "price": 5000000}, {"id": "vach26", "cat": "vach", "name": "Vách cabin các tấm góc sọc đồng ăn mòn hoa văn xen 3 tấm giữa inox gương trắng", "unit": "Bộ", "price": 5000000}, {"id": "vach27", "cat": "vach", "name": "Vách cabin các tấm góc gương trắng ăn mòn hoa văn xen 3 tấm giữa inox gương trắng", "unit": "Bộ", "price": 4000000}, {"id": "vach28", "cat": "vach", "name": "Vách cabin các tấm góc gương vàng ăn mòn hoa văn xen 3 tấm giữa inox gương trắng", "unit": "Bộ", "price": 5000000}, {"id": "vach29", "cat": "vach", "name": "Vách cabin các tấm góc gương đen ăn mòn hoa văn xen 3 tấm giữa inox gương trắng", "unit": "Bộ", "price": 6000000}, {"id": "vach30", "cat": "vach", "name": "Vách cabin các tấm góc gương đồng ăn mòn hoa văn xen 3 tấm giữa inox gương trắng", "unit": "Bộ", "price": 6000000}, {"id": "vach31", "cat": "vach", "name": "Vách cabin các tấm góc sọc trắng xen 3 tấm giữa gương Vàng", "unit": "Bộ", "price": 3000000}, {"id": "vach32", "cat": "vach", "name": "Vách cabin các tấm góc sọc trắng xen 3 tấm giữa gương đen", "unit": "Bộ", "price": 6000000}, {"id": "vach33", "cat": "vach", "name": "Vách cabin các tấm góc sọc trắng xen 3 tấm giữa gương đồng", "unit": "Bộ", "price": 6000000}, {"id": "vach34", "cat": "vach", "name": "Vách cabin các tấm góc gương trắng xen 3 tấm giữa inox gương trắng", "unit": "Bộ", "price": 1000000}, {"id": "vach35", "cat": "vach", "name": "Vách cabin các tấm góc inox gương vàng xen 3 tấm giữa inox gương trắng", "unit": "Bộ", "price": 3000000}, {"id": "vach36", "cat": "vach", "name": "Vách cabin các tấm góc inox gương đen xen 3 tấm giữa inox gương trắng", "unit": "Bộ", "price": 3500000}, {"id": "vach37", "cat": "vach", "name": "Vách cabin các tấm góc inox gương đồng xen 3 tấm giữa inox gương trắng", "unit": "Bộ", "price": 3500000}, {"id": "vach38", "cat": "vach", "name": "Vách cabin các tấm góc inox sọc vàng xen 3 tấm giữa inox gương trắng", "unit": "Bộ", "price": 2500000}, {"id": "vach39", "cat": "vach", "name": "Vách cabin các tấm góc inox sọc đồng xen 3 tấm giữa inox gương trắng", "unit": "Bộ", "price": 3500000}, {"id": "vach40", "cat": "vach", "name": "Vách cabin các tấm góc inox sọc đen xen 3 tấm giữa inox gương trắng", "unit": "Bộ", "price": 3500000}, {"id": "vach41", "cat": "vach", "name": "Vách cabin các tấm góc inox gương trắng xen 3 tấm giữa inox gương vàng", "unit": "Bộ", "price": 4000000}, {"id": "vach42", "cat": "vach", "name": "Vách cabin các tấm góc inox gương trắng xen 3 tấm giữa inox gương Đồng", "unit": "Bộ", "price": 6000000}, {"id": "vach43", "cat": "vach", "name": "Vách cabin các tấm góc inox gương trắng xen 3 tấm giữa inox gương Đen", "unit": "Bộ", "price": 6000000}, {"id": "vach44", "cat": "vach", "name": "Vách cabin các tấm góc inox sọc vàng xen 3 tấm giữa inox gương vàng", "unit": "Bộ", "price": 5500000}, {"id": "vach45", "cat": "vach", "name": "Vách cabin các tấm góc inox sọc đồng xen 3 tấm giữa inox gương đồng", "unit": "Bộ", "price": 8000000}, {"id": "vach46", "cat": "vach", "name": "Vách cabin các tấm góc inox sọc đen xen 3 tấm giữa inox gương đen", "unit": "Bộ", "price": 8000000}, {"id": "vach47", "cat": "vach", "name": "Vách cabin sử dụng kính cường lực dày 10mm viền khung inox sọc nhuyễn, gương dày 1mm cộng thêm", "unit": "Vách", "price": 3500000}, {"id": "vach48", "cat": "vach", "name": "Vách cabin sử dụng kính cường lực dày 10mm viền khung inox sọc vàng, gương vàng dày 1mm cộng thêm", "unit": "Vách", "price": 4500000}, {"id": "vach49", "cat": "vach", "name": "Vách cabin sử dụng kính cường lực dày 10mm viền khung inox sọc đồng, gương đồng dày 1mm cộng thêm", "unit": "Vách", "price": 5000000}, {"id": "vach50", "cat": "vach", "name": "Vách cabin sử dụng kính cường lực dày 10mm viền khung inox sọc đen, gương đen dày 1mm cộng thêm", "unit": "Vách", "price": 5000000}, {"id": "combo51", "cat": "combo", "name": "Cabin chuyển từ inox thường qua inox sọc vàng xen kẽ gương vàng (Bao gồm trần giả, butong cabin, cửa cabin inox sọc vàng, 2 tay vịn tròn và vách inox vàng)", "unit": "Bộ", "price": 8500000}, {"id": "combo52", "cat": "combo", "name": "Cabin chuyển từ inox thường qua inox sọc đồng xen kẽ gương đồng (Bao gồm trần giả, butong cabin, cửa cabin inox sọc đồng, 2 tay vịn tròn inox mạ đồng)", "unit": "Bộ", "price": 13000000}, {"id": "combo53", "cat": "combo", "name": "Cabin chuyển từ inox thường qua inox sọc đen xen kẽ gương đen (Bao gồm trần giả, butong cabin, cửa cabin inox sọc đồng, 2 tay vịn tròn inox mạ đồng)", "unit": "Bộ", "price": 13000000}, {"id": "combo54", "cat": "combo", "name": "Cabin chuyển từ inox thường qua inox sọc vàng xen kẽ hoa văn gương vàng (Bao gồm trần giả, butong cabin, cửa cabin inox sọc vàng, 2 tay vịn tròn inox vàng)", "unit": "Bộ", "price": 14000000}, {"id": "combo55", "cat": "combo", "name": "Cabin chuyển từ inox thường qua inox sọc đồng, sọc đen xen kẽ hoa văn gương đồng, gương đen (Bao gồm trần giả, butong cabin, cửa cabin inox sọc đồng, sọc đen 2 tay vịn tròn inox đồng, đen)", "unit": "Bộ", "price": 16000000}, {"id": "combo56", "cat": "combo", "name": "Cabin chuyển từ inox thường qua cabin 3 vách kính cường lực dày 10mm khung inox sọc nhuyễn , vách đố trước cửa cabin có ốp che xương", "unit": "Bộ", "price": 12000000}, {"id": "combo57", "cat": "combo", "name": "Cabin chuyển từ inox thường qua cabin 3 vách kính cường lực dày 10mm viền khung inox sọc nhuyễn vàng , vách đố trước cửa cabin có ốp che xương inox sọc nhuyễn vàng. ( trần giả inox gương vàng, mặt gọi cabin inox gương vàng, tay vịn tròn inox gương vàng)", "unit": "Bộ", "price": 17000000}, {"id": "combo58", "cat": "combo", "name": "Cabin chuyển từ inox thường qua cabin 3 vách kính cường lực dày 10mm viền khung inox sọc nhuyễn đồng, đen , vách đố trước cửa cabin có ốp che xương inox sọc nhuyễn đồng, đen. ( trần giả inox gương đồng, đen, mặt gọi cabin inox gương đồng, đen, tay vịn tròn inox gương đồng, đen)", "unit": "Bộ", "price": 20000000}, {"id": "combo59", "cat": "combo", "name": "Cabin chuyển từ inox thường qua cabin 3 vách kính cường lực dày 10mm viền khung inox bóng gương vàng , vách đố trước cửa cabin có ốp che xương inox vàng gương. ( trần giả inox gương vàng, mặt gọi cabin inox gương vàng, tay vịn tròn inox gương vàng)", "unit": "Bộ", "price": 19000000}, {"id": "cua60", "cat": "cua", "name": "Cánh cửa từ Inox sọc nhuyễn sang inox gương", "unit": "Bộ", "price": 500000}, {"id": "cua61", "cat": "cua", "name": "Cánh cửa từ Inox sọc nhuyễn sang inox gương hoa văn trắng", "unit": "Bộ", "price": 2000000}, {"id": "cua62", "cat": "cua", "name": "Cánh cửa từ Inox sọc nhuyễn trắng sang inox gương vàng ăn mòn hoa văn", "unit": "Bộ", "price": 2700000}, {"id": "cua63", "cat": "cua", "name": "Cánh cửa từ Inox sọc nhuyễn trắng sang inox gương đồng, gương đen ăn mòn hoa văn", "unit": "Bộ", "price": 3000000}, {"id": "cua64", "cat": "cua", "name": "Cánh cửa từ Inox sọc nhuyễn trắng sang inox sọc vàng", "unit": "Bộ", "price": 1300000}, {"id": "cua65", "cat": "cua", "name": "Cánh cửa từ Inox sọc nhuyễn trắng sang inox sọc đồng, sọc đen", "unit": "Bộ", "price": 2000000}, {"id": "cua66", "cat": "cua", "name": "Cánh cửa từ Inox sọc nhuyễn trắng sang inox gương vàng", "unit": "Bộ", "price": 1500000}, {"id": "cua67", "cat": "cua", "name": "Cánh cửa từ Inox sọc nhuyễn trắng sang inox gương đồng, gương đen", "unit": "Bộ", "price": 2000000}, {"id": "cua68", "cat": "cua", "name": "Cánh cửa từ Inox sọc trắng sang cửa khung inox sọc trắng kết hợp kính cường lực dày 10mm", "unit": "Bộ", "price": 1500000}, {"id": "cua69", "cat": "cua", "name": "Cánh cửa từ Inox sọc trắng sang cửa khung inox sọc vàng kết hợp kính cường lực dày 10mm", "unit": "Bộ", "price": 2500000}, {"id": "cua70", "cat": "cua", "name": "Cánh cửa từ Inox sọc trắng sang cửa khung inox sọc đồng, sọc đen kết hợp kính cường lực dày 10mm", "unit": "Bộ", "price": 3500000}, {"id": "cua71", "cat": "cua", "name": "Cánh cửa từ Inox sọc trắng sang cửa khung inox gương vàng kết hợp kính cường lực dày 10mm", "unit": "Bộ", "price": 3000000}, {"id": "cua72", "cat": "cua", "name": "Cánh cửa từ Inox sọc trắng sang cửa khung inox gương đồng, gương đen kết hợp kính cường lực dày 10mm", "unit": "Bộ", "price": 3500000}, {"id": "cua73", "cat": "cua", "name": "Cánh cửa từ Inox dày 1mm sang inox dày 1.2 mm", "unit": "Bộ", "price": 400000}, {"id": "cua74", "cat": "cua", "name": "Cánh cửa từ Inox dày 1.2mm sang inox dày 1.5 mm", "unit": "Bộ", "price": 800000}, {"id": "baoche75", "cat": "baoche", "name": "Bao che rộng từ Inox sọc nhuyễn trắng sang inox gương trắng", "unit": "Bộ", "price": 500000}, {"id": "baoche76", "cat": "baoche", "name": "Bao che rộng từ Inox sọc nhuyễn trắng sang inox sọc vàng", "unit": "Bộ", "price": 1000000}, {"id": "baoche77", "cat": "baoche", "name": "Bao che rộng từ Inox sọc nhuyễn trắng sang inox sọc đồng, sọc đen", "unit": "Bộ", "price": 2000000}, {"id": "baoche78", "cat": "baoche", "name": "Bao che rộng từ Inox gương trắng sang inox gương vàng", "unit": "Bộ", "price": 1000000}, {"id": "baoche79", "cat": "baoche", "name": "Bao che rộng từ Inox gương trắng sang inox gương đồng, gương đen", "unit": "Bộ", "price": 2000000}, {"id": "baoche80", "cat": "baoche", "name": "Bao che rộng từ Inox 1.2 mm sang inox 1.5 mm", "unit": "Bộ", "price": 1000000}, {"id": "baoche81", "cat": "baoche", "name": "Bao che hẹp từ Inox 1.2mm sang inox 1.5 mm", "unit": "Bộ", "price": 300000}, {"id": "baoche82", "cat": "baoche", "name": "Bao che hẹp từ Inox sọc nhuyễn sang inox gương", "unit": "Bộ", "price": 300000}, {"id": "baoche83", "cat": "baoche", "name": "Bao che hẹp từ Inox sọc nhuyễn sang inox sọc vàng, gương vàng", "unit": "Bộ", "price": 500000}, {"id": "baoche84", "cat": "baoche", "name": "Bao che bản hẹp sọc nhuyễn trắng chuyển sang bao che bản rộng – Inox sọc trắng", "unit": "Bộ", "price": 1500000}, {"id": "baoche85", "cat": "baoche", "name": "Bao che bản hẹp sọc nhuyễn trắng chuyển sang bao che bản rộng – Inox gương trắng", "unit": "Bộ", "price": 2000000}, {"id": "baoche86", "cat": "baoche", "name": "Bao che bản hẹp sọc nhuyễn trắng chuyển sang bao che bản rộng – Inox sọc vàng", "unit": "Bộ", "price": 2500000}, {"id": "baoche87", "cat": "baoche", "name": "Bao che bản hẹp sọc nhuyễn trắng chuyển sang bao che bản rộng – Inox sọc đồng, sọc đen", "unit": "Bộ", "price": 3500000}, {"id": "baoche88", "cat": "baoche", "name": "Bao che bản hẹp sọc nhuyễn trắng chuyển sang bao che bản rộng – Inox gương vàng", "unit": "Bộ", "price": 2700000}, {"id": "baoche89", "cat": "baoche", "name": "Bao che bản hẹp sọc nhuyễn trắng chuyển sang bao che bản rộng – Inox gương đồng, gương đen", "unit": "Bộ", "price": 3500000}, {"id": "khac90", "cat": "tayvin", "name": "Chuyển từ tay vịn tròn sang tay vịn tròn loại 3 thanh màu trắng", "unit": "Thanh", "price": 1000000}, {"id": "khac91", "cat": "tayvin", "name": "Chuyển từ tay vịn tròn sang tay vịn tròn loại 3 thanh màu vàng, đồng, đen", "unit": "Thanh", "price": 1500000}, {"id": "khac92", "cat": "tayvin", "name": "Chuyển từ tay vịn tròn sang tay vịn dẹt trắng", "unit": "Thanh", "price": 300000}, {"id": "khac93", "cat": "tayvin", "name": "Chuyển từ tay vịn tròn sang tay vịn dẹt vàng, đồng, đen", "unit": "Thanh", "price": 600000}, {"id": "khac94", "cat": "tayvin", "name": "Chuyển từ tay vịn tròn sang tay vịn tròn mạ vàng, mạ đồng, mạ đen", "unit": "Thanh", "price": 300000}, {"id": "khac95", "cat": "trangia", "name": "Trần giả sử dụng inox sọc vàng", "unit": "Bộ", "price": 1000000}, {"id": "khac96", "cat": "trangia", "name": "Trần giả sử dụng inox sọc đồng, sọc đen", "unit": "Bộ", "price": 2000000}, {"id": "khac97", "cat": "trangia", "name": "Trần giả sử dụng inox gương vàng", "unit": "Bộ", "price": 1500000}, {"id": "khac98", "cat": "trangia", "name": "Trần giả sử dụng inox gương đồng, gương đen", "unit": "Bộ", "price": 2000000}, {"id": "khac99", "cat": "butong", "name": "Butong cabin Inox sọc nhuyễn sang inox gương", "unit": "Cái", "price": 400000}, {"id": "khac100", "cat": "butong", "name": "Butong cabin Inox sọc nhuyễn sang inox gương vàng, sọc vàng, gương đồng, sọc đồng, gương đen, sọc đen.", "unit": "Cái", "price": 500000}, {"id": "khac101", "cat": "butong", "name": "Butong tầng Inox sọc nhuyễn sang inox gương", "unit": "Cái", "price": 100000}, {"id": "khac102", "cat": "butong", "name": "Butong tầng Inox sọc nhuyễn sang inox sọc vàng", "unit": "Cái", "price": 200000}, {"id": "khac103", "cat": "butong", "name": "Butong tầng Inox sọc nhuyễn sang inox gương vàng", "unit": "Cái", "price": 300000}, {"id": "khac104", "cat": "cuamo", "name": "Cửa cabin mở lùa 02 cánh kích thước 600-900", "unit": "Bộ", "price": 3000000}, {"id": "khac105", "cat": "cuamo", "name": "Cửa tầng mở lùa 02 cánh kích thước 600-900 mm", "unit": "Stop", "price": 1500000}, {"id": "khac106", "cat": "cuamo", "name": "Cửa cabin mở tâm 4 cánh mở về 2 phía kích thước 600-900", "unit": "Bộ", "price": 5000000}, {"id": "khac107", "cat": "cuamo", "name": "Cửa tầng mở tâm 4 cánh mở về 2 phía kích thước 600-900", "unit": "Stop", "price": 4000000}, {"id": "khac108", "cat": "mathang", "name": "Mặt button cabin hiển thị LED sang LCD 6,3 inch đơn sắc", "unit": "Cái", "price": 1000000}, {"id": "khac109", "cat": "mathang", "name": "Mặt button cabin hiển thị LED sang LCD 7 inch đa sắc", "unit": "Cái", "price": 2500000}, {"id": "khac110", "cat": "opdong", "name": "Ốp dóng cabin inox sọc nhuyễn dày 1mm", "unit": "Bộ", "price": 1500000}, {"id": "khac111", "cat": "opdong", "name": "Ốp dóng cabin inox gương trắng dày 1mm", "unit": "Bộ", "price": 2000000}, {"id": "khac112", "cat": "opdong", "name": "Ốp dóng cabin inox sọc vàng dày 1mm", "unit": "Bộ", "price": 2500000}, {"id": "khac113", "cat": "opdong", "name": "Ốp dóng cabin inox gương vàng dày 1mm", "unit": "Bộ", "price": 3000000}, {"id": "khac114", "cat": "doitrong", "name": "Phát sinh ốp che quả đối trọng khi cabin sử dụng 1 vách kính trên một cabin", "unit": "Bộ", "price": 2000000}, {"id": "khac115", "cat": "doitrong", "name": "Phát sinh ốp che quả đối trọng khi vách cabin không sử dụng vách kính", "unit": "Bộ", "price": 3000000}, {"id": "khac116", "cat": "khac", "name": "Phát sinh bản mã liên kết braket tường với khung thép", "unit": "Cái", "price": 10000}, {"id": "tudieu117", "cat": "tudieu", "name": "Phát sinh thang sử dụng tủ điện EC3000E", "unit": "Bộ", "price": 10000000}, {"id": "maykeo118", "cat": "maykeo", "name": "Máy kéo thang máy Sicor SG10B; 320kg; 1m/s; pulley 240; 3.4kW; 3xØ8", "unit": "Cái", "price": 25000000}, {"id": "maykeo119", "cat": "maykeo", "name": "Máy kéo thang máy Sicor SG15BF; 480kg; 1m/s; pulley 240; 5,1kW; 5xØ8", "unit": "Cái", "price": 27000000}, {"id": "maykeo120", "cat": "maykeo", "name": "Máy kéo thang máy Sicor SG30BF;630kg; 1m/s; pulley 320; 5,0kW, 5xØ8", "unit": "Cái", "price": 27500000}, {"id": "maykeo121", "cat": "maykeo", "name": "Máy kéo thang máy Sicor SG30BF;630kg; 1,5m/s; pulley 320; 8,2kW,5xØ8", "unit": "Cái", "price": 27500000}, {"id": "maykeo122", "cat": "maykeo", "name": "Máy kéo thang máy Sicor SG38BF;800kg; 1m/s; pulley 320; 6.1kW, 7xØ8", "unit": "Cái", "price": 36000000}, {"id": "maykeo123", "cat": "maykeo", "name": "Máy kéo thang máy Sicor SG40BF;1000kg; 1m/s; pulley 320; 6,9kW, 7xØ8", "unit": "Cái", "price": 39000000}, {"id": "maykeo124", "cat": "maykeo2", "name": "Phát sinh thang sử dụng Máy keo Ziehl- Abegg SM200.15D puly D240 cáp 6.5. Công suất 4.4kw tải 450kg", "unit": "Cái", "price": 48000000}, {"id": "maykeo125", "cat": "maykeo2", "name": "Phát sinh thang sử dụng Máy keo Ziehl - Abegg SM200.15D puly D320 cáp 8. Công suất 3.1kw tải 450kg", "unit": "Cái", "price": 50000000}, {"id": "maykeo126", "cat": "maykeo2", "name": "Phát sinh thang sử dụng Máy keo Ziehl - Abegg SM200.23D puly D320 cáp 8. Công suất 4.8kw tải 630kg", "unit": "Cái", "price": 58000000}, {"id": "maykeo127", "cat": "maykeo2", "name": "Phát sinh thang sử dụng Máy keo Ziehl - Abegg SM200.23D puly D320 cáp 8. Công suất 7.6kw tải 630kg Tốc độ 90m/p", "unit": "Cái", "price": 58000000}, {"id": "maykeo128", "cat": "maykeo2", "name": "Phát sinh thang sử dụng Máy keo Ziehl - Abegg SM200.30D puly D320 cáp 8. Công suất 6.0kw tải 800kg", "unit": "Cái", "price": 69000000}, {"id": "maykeo129", "cat": "maykeo2", "name": "Phát sinh thang sử dụng Máy keo Ziehl - Abegg SM200.30D puly D320 cáp 8. Công suất 9.6kw tải 800kg tốc độ 90m/p", "unit": "Cái", "price": 69000000}, {"id": "maykeo130", "cat": "maykeo", "name": "Phát sinh thang sử dụng Máy kéo Motanary MGX75 450kg, 630kg", "unit": "Cái", "price": 35000000}, {"id": "maykeo131", "cat": "maykeo", "name": "Phát sinh thang sử dụng Máy kéo Motanary MGV25S", "unit": "Cái", "price": 38000000}];
+const M=1e6;
+/* ---------- Danh mục thiết bị (triệu đồng) ---------- */
+const STD={
+ fk:{n:'Fuji Lif Korea',o:'Hàn Quốc',ctl:'Fuji Lif MT70',rows:[[350,209,216,'FK100'],[450,214,221,'FK100'],[630,223,230,'FK200'],[800,238,248,'FK200'],[1000,260,267,'FK200'],[1250,297,327,'FK300'],[1600,350,380,'FK300']]},
+ fj:{n:'Fuji Japan',o:'Nhật Bản',ctl:'Fuji SmartX1.0',rows:[[350,206,213,'FJG02'],[450,211,218,'FJG02'],[630,220,227,'FJG02'],[800,235,245,'FJG02'],[1000,257,264,'FJG02']]},
+ sc:{n:'Sicor',o:'Ý',ctl:'EC3000E',rows:[[320,242,null,'SG10145B'],[450,250,null,'SG15145BF'],[630,259,null,'SG30145BF'],[800,285,null,'SG38145BF'],[1000,310,null,'SG40145BF']]},
+ tn:{n:'Torin / Nice3000',o:'Trung Quốc',ctl:'AS380S – Nice3000',rows:[[350,204,211,'GTW7A'],[450,209,216,'GTW7A'],[630,218,225,'GTW9S'],[800,233,240,'GTW9S'],[1000,255,262,'GTW9S'],[1250,292,322,'GTW10X'],[1600,345,375,'GTW10X']]}
+};
+const CO={
+ fk:{n:'Fuji Lif Korea',o:'Hàn Quốc',ctl:'Fuji Lif MT70',rows:[[350,214,'MN200'],[450,219,'MN200']]},
+ fj:{n:'Fuji Japan',o:'Nhật Bản',ctl:'Fuji SmartX1.0',rows:[[350,211,'FJG02'],[450,216,'FJG02']]},
+ sc:{n:'Sicor',o:'Ý',ctl:'EC3000E',rows:[[320,247,'SG10145B'],[450,255,'SG15145BF']]},
+ tn:{n:'Torin / Nice3000',o:'Trung Quốc',ctl:'Nice3000 / AS380S',rows:[[350,209,'ERSC-41P0B'],[450,214,'ERSC-41P0B']]}
+};
+const HINGE={
+ fk:{n:'Fuji Lif Korea',o:'Hàn Quốc',ctl:'Fuji Lif MT70',rows:[[350,'MN200']],p:[241,272,289.5]},
+ fj:{n:'Fuji Japan',o:'Nhật Bản',ctl:'Fuji SmartX1.0',rows:[[350,'FJG02']],p:[238,269,286.5]},
+ sc:{n:'Sicor',o:'Ý',ctl:'SmartX1.0',rows:[[320,'SG10145B']],p:[266,297,314.5]}
+};
+const DOORS=[
+ {n:'1 cánh mở tay',step:10,dim:'W 600–1100 · D 650–1100 · cửa 600–900'},
+ {n:'1 cánh mở tự động',step:15,dim:'W 600–1100 · D 650–1100 · cửa 600–900'},
+ {n:'2 cánh mở tự động',step:18.5,dim:'W 700–1100 · D 650–1100 · cửa 700–1100'}
+];
+const TYPES=[
+ {id:'std',n:'Thang khách tiêu chuẩn',d:'60 hoặc 90 m/phút · 320–1600 kg · cửa mở tâm hoặc lùa'},
+ {id:'co',n:'Homlif tiêu chuẩn',d:'30 m/phút · 320–450 kg · cabin và cửa kích thước tiêu chuẩn'},
+ {id:'hinge',n:'Homlif cửa bản lề',d:'30 m/phút · 320–350 kg · cửa bản lề, tải nhỏ'}
+];
+const DIMS=[[350,'900–1150','900–1000','600–700'],[450,'900–1350','900–1100','700–800'],[630,'900–1400','900–1250','700–800'],[800,'1200–1500','1100–1350','800–900'],[1000,'1500–2000','1400–1700','900–1000'],[1600,'1800–2000','1700–2000','1000–1200']];
+function dimFor(l,type){const d=DIMS.find(x=>l<=x[0])||DIMS[5];let W=d[1];let D=d[2];
+  if(type==='co'&&l===450){W='900–1250';D='900–1050'}
+  return {W,D,CO:d[3]}}
+const TIERS=[[72,6],[60,5],[37,4],[20,3]];
+const SAN=[['none','Sàn tiêu chuẩn (đá ghép 2 màu)',0],['uv','Sàn kính cường lực in UV',1],['hoavan','Sàn đá hoa văn theo catalogue',2]];
+
+/* ---------- Trạng thái ---------- */
+const DEF={type:'std',stops:5,brand:null,load:null,speed:null,door:null,qty:1,annual:0,markup:0,qid:'',cabMode:'zone',cabKind:'normal',doorGlass:false,inox:'1.2',sel:{},doorKind:'',inox1:false,rayT89:false,rayTH5A:false,san:'none',cust:{name:'',proj:'',contact:''},step:0};
+let S=JSON.parse(JSON.stringify(DEF));
+try{const r=localStorage.getItem('baogia-thang-v1');if(r)S=Object.assign(JSON.parse(JSON.stringify(DEF)),JSON.parse(r))}catch(e){}
+function save(){try{localStorage.setItem('baogia-thang-v1',JSON.stringify(S))}catch(e){}}
+
+const $=s=>document.querySelector(s);
+const fmt=n=>new Intl.NumberFormat('vi-VN').format(Math.round(n));
+const unit=n=>n<0?sgn(n):fmt(n);
+const sgn=n=>(n>0?'+':n<0?'−':'')+fmt(Math.abs(n));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function brands(){return S.type==='std'?STD:S.type==='co'?CO:HINGE}
+function loadsOf(b){return (brands()[b].rows).map(r=>r[0])}
+function allLoads(){const s=new Set();Object.values(brands()).forEach(b=>b.rows.forEach(r=>s.add(r[0])));return [...s].sort((a,b)=>a-b)}
+function availBrands(){
+  if(!S.load||(S.type==='std'&&!S.speed)||(S.type==='hinge'&&S.door==null))return [];
+  return Object.keys(brands()).filter(k=>{const r=brands()[k].rows.find(x=>x[0]===S.load);if(!r)return false;if(S.type==='std'&&S.speed===90&&r[2]==null)return false;return true});
+}
+function normalize(){
+  if(S.load&&!allLoads().includes(S.load))S.load=null;
+  S.speed=S.type==='std'?([60,90].includes(S.speed)?S.speed:null):30;
+  if(S.type==='hinge'&&S.door!=null&&!DOORS[S.door])S.door=null;
+  if(S.brand&&!availBrands().includes(S.brand))S.brand=null;
+  S.stops=Math.max(2,Math.min(9,S.stops));
+}
+function rowPrice(b,r){if(S.type==='std')return S.speed===90?r[2]:r[1];if(S.type==='co')return r[1];return b.p[S.door]}
+function rowMotor(r){return S.type==='std'?r[3]:S.type==='co'?r[2]:r[1]}
+function baseRow(){return lowestRow()}
+function lowestRow(){
+  if(!S.load||(S.type==='std'&&!S.speed)||(S.type==='hinge'&&S.door==null))return null;
+  let best=null;
+  for(const k of Object.keys(brands()))for(const r of brands()[k].rows){
+    if(S.type==='std'&&k!=='tn')continue;
+    if(!sameGroup(r[0],S.load))continue;const p=rowPrice(brands()[k],r);if(p==null)continue;
+    if(!best||p<best.price)best={price:p,motor:rowMotor(r),b:brands()[k],key:k,load:r[0]}}
+  return best;
+}
+function swapped(){return ITEMS.some(i=>(i.cat==='maykeo'||i.cat==='maykeo2'||i.cat==='tudieu')&&i.id in S.sel)}
+function cfgRow(){return lowestRow()}
+function inoxV(){return S.inox||(S.inox1?'1.0':'1.2')}
+function motorInfo(it){
+  const ms=it.name.match(/(\d+(?:[,.]\d+)?)\s*m\/s/i),mp=it.name.match(/(\d+)\s*m\/p/i);
+  const ld=[...it.name.matchAll(/(\d+)\s*kg/gi)].map(x=>+x[1]);
+  return {speed:ms?Math.round(parseFloat(ms[1].replace(',','.'))*60):mp?+mp[1]:null,load:ld.length?Math.max(...ld):null};
+}
+const LGRP=[[320,350],[450,480],[630],[800],[1000],[1250,1350],[1600]];
+function sameGroup(a,b){return LGRP.some(g=>g.includes(a)&&g.includes(b))}
+function motorOk(it){
+  const m=motorInfo(it),lds=[...it.name.matchAll(/(\d+)\s*kg/gi)].map(x=>+x[1]);
+  const loadOk=!lds.length||lds.some(l=>sameGroup(l,S.load));
+  const spOk=S.type!=='std'||m.speed==null||m.speed===S.speed;
+  return loadOk&&spOk}
+
+const BN={fk:'Fuji Lif Korea',fj:'Fuji Japan',sc:'Sicor (Ý)',tn:'Torin (Trung Quốc)'};
+const KW={std:{fk:{350:[3.1,4.7,5.5,7.5],450:[3.1,4.7,5.5,7.5],630:[4.3,6.4,7.5,11],800:[5.4,8.1,7.5,11],1000:[6.7,10,11,15],1250:[9.2,13.8,15,18.5],1600:[11,16.6,18.5,22]},
+ fj:{350:[4.2,6.3,5.5,7.5],450:[4.2,6.3,5.5,7.5],630:[4.2,6.3,7.5,11],800:[5.3,8,7.5,11],1000:[6.5,9.8,11,15]},
+ sc:{320:[3.4,0,5.5,0],450:[5.1,0,7.5,0],630:[5,0,7.5,0],800:[6.1,0,11,0],1000:[6.9,0,11,0]},
+ tn:{350:[3.1,4.7,5.5,7.5],450:[3.1,4.7,5.5,7.5],630:[4.3,6.4,7.5,11],800:[5.4,8.1,7.5,11],1000:[6.7,10,11,15],1250:[8.9,13.3,15,18.5],1600:[10.4,15.7,15,18.5]}},
+ co:{fk:{350:[3,0,5.5,0],450:[3,0,5.5,0]},fj:{350:[3.3,0,5.5,0],450:[3.3,0,5.5,0]},sc:{320:[3.4,0,5.5,0],450:[5.1,0,7.5,0]},tn:{350:[3,0,5.5,0],450:[3.3,0,5.5,0]}},
+ hinge:{fk:{350:[3,0,5.5,0]},fj:{350:[3,0,5.5,0]},sc:{320:[3.4,0,5.5,0]}}};
+const PANEL={fk:'Fuji Lif MT70 (Hàn Quốc)',fj:'Fuji SmartX1.0 (Nhật Bản)',sc:'Sicor EC3000E (Ý)',tn:'Nice3000 / AS380S (Trung Quốc)'};
+function fullSpec(){
+  const br=cfgRow(),ck=br.key,k=(KW[S.type][ck]||{})[br.load]||[0,0,0,0],o=S.speed===90?1:0;
+  const mk=k[o]||k[0],pn=k[2+o]||k[2];
+  const kw=x=>x?' · '+String(x).replace('.',',')+' kW':'';
+  const panel=(S.type==='hinge'&&ck==='sc')?PANEL.fj:PANEL[ck];
+  const dm=S.type==='hinge'?{W:S.door===2?'700–1100':'600–1100',D:'650–1100',CO:S.door===2?'700–1100':'600–900'}:dimFor(S.load,S.type);
+  const ch=S.type==='hinge'?'≤ 2250':'2200–2300',dh=S.type==='hinge'?'≤ 2100':'2000–2200';
+  let motor=`${BN[ck]} ${br.motor}${kw(mk)}`,panelS=panel+kw(pn),speed=S.speed,swapM=false,swapP=false,warn='';
+  const sm=ITEMS.find(i=>(i.cat==='maykeo'||i.cat==='maykeo2')&&i.id in S.sel);
+  if(sm&&sm.pack){swapM=true;swapP=true;motor=sm.pack.motor;panelS=sm.pack.panel;speed=+(sm.name.match(/(\d+) m\/p/)||[0,S.speed])[1]}
+  else if(sm){swapM=true;motor=sm.name.replace(/^Phát sinh\s+/i,'').replace(/^thang\s+sử dụng\s+/i,'').replace(/^Máy\s+kéo\s+thang\s+máy\s+/i,'Máy kéo ').replace(/Máy keo/i,'Máy kéo');
+    const ms=sm.name.match(/(\d+(?:[,.]\d+)?)\s*m\/s/i),mp=sm.name.match(/(\d+)\s*m\/p/i);
+    if(ms)speed=Math.round(parseFloat(ms[1].replace(',','.'))*60);else if(mp)speed=+mp[1];
+    const ld=[...sm.name.matchAll(/(\d+)\s*kg/gi)].map(x=>+x[1]);
+    if(ld.length&&Math.max(...ld)<S.load)warn=`Máy kéo này chỉ đến ${Math.max(...ld)} kg, thấp hơn tải trọng đã chọn (${S.load} kg).`;
+    else if(speed!==S.speed)warn=`Máy kéo này chạy ${speed} m/phút, khác tốc độ đã chọn (${S.speed} m/phút). Giá cơ sở chưa đổi theo.`}
+  const st=ITEMS.find(i=>i.cat==='tudieu'&&i.id in S.sel);
+  if(st&&!(sm&&sm.pack)){swapP=true;panelS='EC3000E (Sicor, Ý)'}
+  return {swapM,swapP,speed,warn,price:br.price,low:swapped(),motor,panel:panelS,cabin:`R ${dm.W} × S ${dm.D} mm`,cabinH:ch,door:`Rộng ${dm.CO} mm`,doorH:dh};
+}
+function specHtml(){const f=fullSpec();return `<dl class="spec">
+ <div class="sr price"><dt>Giá cơ sở</dt><dd>${f.price} triệu</dd></div>
+ <div class="sr"><dt>Tốc độ</dt><dd>${f.speed} m/phút</dd></div>
+ <div class="sr"><dt>Máy kéo</dt><dd>${esc(f.motor)}${f.swapM?'<small>Đã thay máy kéo tiêu chuẩn</small>':''}</dd></div>
+ <div class="sr"><dt>Tủ điều khiển</dt><dd>${esc(f.panel)}${f.swapP?'<small>Đã thay tủ điều khiển tiêu chuẩn</small>':''}</dd></div>
+ <div class="sr"><dt>Kích thước cabin (rộng × sâu)</dt><dd>${esc(f.cabin)}<small>Cao ${f.cabinH} mm</small></dd></div>
+ <div class="sr"><dt>Cửa thang</dt><dd>${esc(f.door)}<small>Cao ${f.doorH} mm</small></dd></div></dl>${f.warn?`<div class="note">${esc(f.warn)}</div>`:''}`}
+function stopAdj(){
+  const n=S.stops;if(n===5)return {v:0,txt:'5 điểm dừng (giá chuẩn)'};
+  if(S.type==='hinge'){const d=(DOORS[S.door]||DOORS[0]).step;return {v:(n-5)*d,txt:`${n} điểm dừng · ${n>5?'+':'−'}${d} triệu mỗi stop`}}
+  let up=12,dn=10,last=6;
+  if(S.type==='std'){if(S.load>=1250){up=17;dn=14;last=10}else if(S.load>=900){up=15;dn=12;last=8}}
+  if(n>5)return {v:(n-5)*up,txt:`${n} điểm dừng · +${up} triệu mỗi stop thêm`};
+  if(n>=3)return {v:-(5-n)*dn,txt:`${n} điểm dừng · −${dn} triệu mỗi stop bớt`};
+  return {v:-(2*dn+last),txt:`2 điểm dừng · −${dn} triệu mỗi stop bớt, stop thứ 3 −${last} triệu`};
+}
+function defQty(it){
+  if(it.unit==='Stop'||it.cat==='baoche'||/^Butong tầng/.test(it.name))return S.stops;
+  if(it.cat==='cua'||it.cat==='cuaday')return S.stops+1;return 1}
+ITEMS.forEach(it=>{if(it.cat!=='vach')return;const n=it.name;
+  if(/^Vách cabin từ Inox dày/.test(n))it.cat='vday';
+  else if(/^Thay tấm vách lớn/.test(n))it.cat='vlon';
+  else if(/kính cường lực/i.test(n))it.cat='vkinh';
+  else{const m=n.match(/các tấm góc (.*?) xen 3 tấm giữa (.*)$/);
+    if(m&&/ăn mòn/.test(m[2]))it.cat='vgoc1';else if(m&&/ăn mòn/.test(m[1]))it.cat='vgoc2';else it.cat='vgoc3'}});
+ITEMS.forEach(it=>{if(it.cat==='baoche'&&/Inox 1\.2\s*mm sang inox 1\.5/i.test(it.name))it.cat='bcday'});
+let VG=null;
+function vgList(){if(!VG)VG=ITEMS.filter(i=>/^vgoc/.test(i.cat)).map(it=>{const m=it.name.match(/các tấm góc (.*?) xen 3 tấm giữa (.*)$/);return {it,g:m[1].trim().replace(/\s+/g,' ').toLowerCase(),m:m[2].trim().replace(/\s+/g,' ').toLowerCase()}});return VG}
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+function vgMids(g){return [...new Set(vgList().filter(x=>x.g===g).map(x=>x.m))]}
+function vgApply(){vgList().forEach(x=>delete S.sel[x.it.id]);const f=vgList().find(x=>x.g===S.vgG&&x.m===S.vgM);if(f)S.sel[f.it.id]=1}
+function doorNote(){const it=ITEMS.find(i=>i.cat==='cua'&&i.id in S.sel),dg=S.doorGlass;
+  if(dg){const up=it?it.price:0,per=3500000+up,n=S.stops+1;
+    return `<div class="note" style="background:var(--accent-soft)">Mỗi bộ: cửa kính tiêu chuẩn ${sgn(3500000)} đ${it?` + nâng cấp ${sgn(up)} đ = ${sgn(per)} đ`:''}<br>1 cửa cabin + ${S.stops} cửa tầng = ${n} × ${unit(per)} đ = <b class="mono">${sgn(per*n)} đ</b></div>`}
+  if(!it)return '';
+  return `<div class="note" style="background:var(--accent-soft)">1 cửa cabin × ${unit(it.price)} đ + ${S.stops} cửa tầng × ${unit(it.price)} đ = <b class="mono">${sgn(it.price*(S.stops+1))} đ</b></div>`}
+function vgocHtml(){
+  const gs=[...new Set(vgList().map(x=>x.g))],ms=S.vgG?vgMids(S.vgG):[];
+  if(ms.length===1&&S.vgM!==ms[0]){S.vgM=ms[0];vgApply()}
+  const f=vgList().find(x=>x.g===S.vgG&&x.m===S.vgM);
+  const opt=(v,cur,txt)=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(txt)}</option>`;
+  return `<div class="form"><label>Tấm góc<select id="vg-g" data-vg="g">${opt('',S.vgG||'','Không phối vách góc / giữa')}${gs.map(g=>opt(g,S.vgG,cap(g))).join('')}</select></label>
+  ${ms.length===1?`<label>Tấm giữa (3 tấm)<div class="static" style="padding:10px 12px;border:1px solid var(--border,#888);border-radius:10px">${esc(cap(ms[0]))}</div></label>`:`<label>Tấm giữa (3 tấm)<select id="vg-m" data-vg="m"${S.vgG?'':' disabled'}>${opt('',S.vgM||'','Chọn tấm giữa')}${ms.map(m=>opt(m,S.vgM,cap(m))).join('')}</select></label>`}</div>
+  <div class="note" style="background:var(--accent-soft)">${f?`Bộ vách đã chọn: <b class="mono">${sgn(f.it.price)} đ</b> mỗi bộ.`:S.vgG?'Chọn tấm giữa để tính giá bộ vách.':'Mỗi cabin chỉ dùng một kiểu phối vách góc và vách giữa.'}</div>`}
+const DK={lua:{n:'Cửa mở lùa 02 cánh',cab:ITEMS.find(i=>/^Cửa cabin mở lùa/.test(i.name)),tang:ITEMS.find(i=>/^Cửa tầng mở lùa/.test(i.name))},
+ tam:{n:'Cửa mở tâm 4 cánh',cab:ITEMS.find(i=>/^Cửa cabin mở tâm/.test(i.name)),tang:ITEMS.find(i=>/^Cửa tầng mở tâm/.test(i.name))}};
+const GD=['cua68','cua69','cua70','cua71','cua72'];const isGD=i=>GD.includes(i.id);
+ITEMS.forEach(i=>{if(GD.includes(i.id)&&i.id!=='cua68'){i.price-=1500000;i.name='Nâng cấp: '+i.name.replace(/^Cánh cửa từ Inox sọc trắng sang cửa /,'').replace(/ kết hợp kính cường lực dày 10mm/,' + kính 10 mm')}if(i.id==='cua73'){i.cat='cuaday';i.name='Inox dày 1,2 mm (tiêu chuẩn 1,0 mm)'}if(i.id==='cua74'){i.cat='cuaday';i.name='Inox dày 1,5 mm (tiêu chuẩn 1,0 mm)';i.price=800000}if(i.id==='combo56')i.name='Trọn gói 3 vách kính, khung inox sọc nhuyễn, ốp che xương vách đố';if(i.id==='combo57')i.name='Trọn gói 3 vách kính, khung sọc nhuyễn vàng, trần giả + mặt gọi + tay vịn gương vàng';if(i.id==='combo58')i.name='Trọn gói 3 vách kính, khung sọc nhuyễn đồng/đen, trần giả + mặt gọi + tay vịn gương đồng/đen';if(i.id==='combo59')i.name='Trọn gói 3 vách kính, khung inox bóng gương vàng, trần giả + mặt gọi + tay vịn gương vàng'});
+(function(){const T=STD.tn.rows;
+ for(const k of ['fk','fj'])for(const r of STD[k].rows){const t=T.find(x=>x[0]===r[0]);if(!t)continue;
+  for(const [o,sp] of [[1,60],[2,90]]){if(r[o]==null||t[o]==null)continue;
+   const kk=((KW.std[k]||{})[r[0]])||[0,0,0,0],kw=x=>x?' · '+String(x).replace('.',',')+' kW':'';
+   ITEMS.unshift({id:`pk-${k}-${r[0]}-${sp}`,cat:'maykeo',name:`${STD[k].n} ${r[3]} + tủ ${STD[k].ctl}; ${r[0]} kg; ${sp} m/p`,price:Math.round((r[o]-t[o])*1e6),unit:'Bộ',pack:{motor:`${BN[k]} ${r[3]}${kw(kk[o-1]||kk[0])}`,panel:STD[k].ctl+kw(kk[1+o]||kk[2])}})}}
+})();
+ITEMS.forEach(i=>{if(/^Phát sinh/i.test(i.name)){let n=i.name.replace(/^Phát sinh\s+(thang\s+)?(sử dụng\s+)?/i,'').replace(/Máy keo/i,'Máy kéo');i.name=n.charAt(0).toUpperCase()+n.slice(1)}});
+const byId=Object.fromEntries(ITEMS.map(i=>[i.id,i]));
+
+function calc(){
+  normalize();
+  const br=cfgRow(),adj=stopAdj(),lines=[];
+  if(!br)lines.push({n:'Chưa chọn cấu hình thang',s:'Chọn tải trọng, tốc độ và máy kéo ở bước Thiết bị',v:0});else lines.push({n:TYPES.find(t=>t.id===S.type).n,s:`${S.load} kg · ${S.speed} m/p`+(S.type==='hinge'?` · cửa ${DOORS[S.door].n}`:''),v:br.price*M,k:'base',u:'Thang',q:1,p:br.price*M});
+  if(br){const f=fullSpec();
+    if(!f.swapM)lines.push({n:'Máy kéo: '+f.motor,s:'Máy tiêu chuẩn',v:0,u:'Cái',q:1,p:0});
+    if(!f.swapP)lines.push({n:'Tủ điều khiển: '+f.panel,s:'Tủ tiêu chuẩn',v:0,u:'Bộ',q:1,p:0})}
+  if(S.cabKind==='glass'&&S.cabMode!=='combo'){const f=byId[S.glassF||'vach47'],n=S.glassN||3,nm=f.name.match(/khung inox (sọc \S+)(?:, (gương \S+))?/);lines.push({n:'Vách kính cường lực 10 mm: khung '+(nm?nm[1]+(nm[2]?' + '+nm[2]:''):''),s:`${n} vách × ${unit(f.price)} đ`,v:f.price*n,u:'Vách',q:n,p:f.price})}
+  if(S.doorGlass){const p=3.5*M,n=S.stops+1;lines.push({n:'Cửa kính tiêu chuẩn (khung inox sọc trắng + kính 10 mm)',s:`${n} bộ (1 cửa cabin + ${S.stops} cửa tầng) × ${unit(p)} đ`,v:p*n,u:'Bộ',q:n,p:p})}
+  if(br&&adj.v){const k=Math.abs(S.stops-5),uni=S.stops!==2;lines.push({n:'Điều chỉnh số tầng',s:adj.txt,v:adj.v*M,u:uni?'Stop':'Thang',q:uni?k:1,p:uni?adj.v*M/k:adj.v*M})};
+  if(inoxV()==='1.0')lines.push({n:'Inox dày 1 mm thay 1,2 mm',s:'Giảm trừ theo thang',v:-4*M,u:'Thang',q:1,p:-4*M});
+  if(inoxV()==='1.5')lines.push({n:'Vách cabin từ inox dày 1,2 mm sang inox dày 1,5 mm',s:'Theo bộ vách',v:6.5*M,u:'Bộ',q:1,p:6.5*M});
+  if(S.rayT89)lines.push({n:'Ray cabin T89 thay T78',s:`${S.stops} tầng × 800.000 đ`,v:0.8*M*S.stops,u:'Tầng',q:S.stops,p:0.8*M});
+  if(S.rayTH5A)lines.push({n:'Ray đối trọng TH5A thay T78',s:`${S.stops} tầng × −400.000 đ`,v:-0.4*M*S.stops,u:'Tầng',q:S.stops,p:-0.4*M});
+  const san=SAN.find(x=>x[0]===S.san);if(san[2])lines.push({n:san[1],s:'Trên sàn tiêu chuẩn',v:san[2]*M,u:'Sàn',q:1,p:san[2]*M});
+  for(const id of Object.keys(S.sel)){const it=byId[id];if(!it)continue;
+    if(it.cat==='cuamo')continue;
+    if(isGD(it)){const n=S.stops+1;lines.push({n:it.name,s:`${n} bộ (1 cửa cabin + ${S.stops} cửa tầng) × ${unit(it.price)} đ`,v:it.price*n,u:'Bộ',q:n,p:it.price});continue}
+    if(it.cat==='cua'||it.cat==='cuaday'){const nm=it.name.replace(/^Cánh cửa từ\s+/,'');
+      lines.push({n:'Cửa cabin: '+nm,s:`1 cửa cabin × ${unit(it.price)} đ`,v:it.price,u:'Bộ',q:1,p:it.price});
+      lines.push({n:'Cửa tầng: '+nm,s:`${S.stops} cửa tầng × ${unit(it.price)} đ`,v:it.price*S.stops,u:'Bộ',q:S.stops,p:it.price});continue}const q=(it.cat==='baoche'||it.cat==='bcday')?S.stops:S.sel[id];lines.push({n:it.name,s:`${fmt(q)} ${it.unit} × ${unit(it.price)} đ`,v:it.price*q,x:1,id,u:it.unit,q,p:it.price})}
+  if(S.type==='std'&&DK[S.doorKind]){const d=DK[S.doorKind];
+    lines.push({n:'Cửa cabin: '+d.n,s:`1 cửa cabin × ${unit(d.cab.price)} đ`,v:d.cab.price,u:'Bộ',q:1,p:d.cab.price});
+    lines.push({n:'Cửa tầng: '+d.n,s:`${S.stops} cửa tầng × ${unit(d.tang.price)} đ`,v:d.tang.price*S.stops,u:'Stop',q:S.stops,p:d.tang.price})}
+  const per=lines.reduce((a,l)=>a+l.v,0);
+  const tier=(TIERS.find(t=>S.annual>=t[0])||[0,0])[1];
+  const disc=tier*M*S.qty;
+  const net=per*S.qty-disc;
+  const mk=net*S.markup/100;
+  return {lines,per,tier,disc,gross:per*S.qty,net,mk,total:net+mk};
+}
+
+/* ---------- Lưu, mở báo giá và xuất file (chạy độc lập, không cần máy chủ) ---------- */
+const DB=true,DL=true;
+const LS_Q='baogia-thang-quotes-v1';
+function loadQ(){try{return JSON.parse(localStorage.getItem(LS_Q)||'{}')}catch(e){return {}}}
+function storeQ(o){try{localStorage.setItem(LS_Q,JSON.stringify(o));return true}catch(e){return false}}
+function newId(){const A='23456789ABCDEFGHJKMNPQRSTUVWXYZ';let s='';for(let i=0;i<5;i++)s+=A[Math.floor(Math.random()*A.length)];const d=new Date();return 'BG-'+String(d.getFullYear()).slice(2)+String(d.getMonth()+1).padStart(2,'0')+'-'+s}
+function b64e(str){const b=new TextEncoder().encode(str);let s='';b.forEach(x=>s+=String.fromCharCode(x));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function b64d(c){c=c.replace(/-/g,'+').replace(/_/g,'/');while(c.length%4)c+='=';const s=atob(c),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return new TextDecoder().decode(u)}
+function shareCode(){const o=JSON.parse(JSON.stringify(S));delete o.step;delete o.qid;return 'BGC1.'+b64e(JSON.stringify(o))}
+function refreshList(){const el=document.getElementById('saved-ids');if(!el)return;const Q=loadQ();
+  el.innerHTML=Object.keys(Q).sort().reverse().map(k=>`<option value="${esc(k)}">${esc((Q[k].customer||'')+(Q[k].project?' · '+Q[k].project:''))}</option>`).join('')}
+function copyText(txt,msgEl,okText){const ok=()=>{msgEl.textContent=okText};
+  const fb=()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy')?ok():msgEl.textContent='Hãy chọn và copy thủ công.'}catch(_){msgEl.textContent='Hãy chọn và copy thủ công.'}ta.remove()};
+  try{navigator.clipboard.writeText(txt).then(ok,fb)}catch(_){fb()}}
+
+/* ---------- Đồng bộ Google Sheet ---------- */
+const SYNC_KEY='bg-sync-v1',QUEUE_KEY='bg-queue-v1';
+function syncCfg(){try{return JSON.parse(localStorage.getItem(SYNC_KEY)||'{}')}catch(_){return {}}}
+function syncCfgSave(o){try{localStorage.setItem(SYNC_KEY,JSON.stringify(o));return true}catch(_){return false}}
+function decodeSetup(code){try{const o=JSON.parse(b64d(code.trim().replace(/^CFG1\./,'')));return o&&o.u&&o.k?o:null}catch(_){return null}}
+function queueGet(){try{return JSON.parse(localStorage.getItem(QUEUE_KEY)||'{}')}catch(_){return {}}}
+function queueSet(q){try{localStorage.setItem(QUEUE_KEY,JSON.stringify(q))}catch(_){}}
+function syncRecord(id){
+  const cfg=syncCfg(),Q=loadQ(),d=Q[id];if(!d)return null;
+  const st=JSON.parse(d.state),keep=S;
+  S=Object.assign(JSON.parse(JSON.stringify(DEF)),st);
+  let rec=null;
+  try{const c=calc(),f=baseRow()?fullSpec():null;
+    rec={key:cfg.k,sale:cfg.sale||'Chua-ro-sale',id,created:d.createdAt,updated:d.updatedAt,customer:S.cust.name||'',project:S.cust.proj||'',contact:S.cust.contact||'',
+      type:TYPES.find(t=>t.id===S.type).n,load:S.load,speed:f?f.speed:S.speed,stops:S.stops,qty:S.qty,per:Math.round(c.per),total:Math.round(c.total),
+      detail:c.lines.map(l=>l.n+(l.v?': '+fmt(l.v)+' đ':'')).join('\n'),lines:odooLines(c),state:d.state}}
+  finally{S=keep}
+  return rec}
+function odooLines(c){
+  const L=c.lines.filter(l=>l.v||l.p).map(l=>{const q=l.q||1,p=l.p!=null?l.p:l.v/q;return {n:l.n,s:l.s||'',q:q*S.qty,p:p}});
+  if(c.disc)L.push({n:'Chiết khấu theo sản lượng',s:'',q:1,p:-Math.round(c.disc)});
+  if(c.mk)L.push({n:'Phụ thu / điều chỉnh '+S.markup+'%',s:'',q:1,p:Math.round(c.mk)});
+  return L}
+async function syncSend(id,msgEl){
+  const cfg=syncCfg();if(!cfg.u||!cfg.k)return false;
+  const rec=syncRecord(id);if(!rec)return false;
+  try{await fetch(cfg.u,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(rec)});
+    const q=queueGet();delete q[id];queueSet(q);
+    if(msgEl)msgEl.textContent='Đã gửi báo giá '+id+' lên Google Sheet (tab "'+(cfg.sale||'Chua-ro-sale')+'").';return true}
+  catch(e){const q=queueGet();q[id]=1;queueSet(q);if(msgEl)msgEl.textContent='Chưa gửi được (không có mạng?). Báo giá '+id+' đã lưu trên máy, sẽ tự gửi khi có mạng.';return false}}
+async function syncFlush(){const q=queueGet();for(const id of Object.keys(q))await syncSend(id)}
+window.addEventListener('online',syncFlush);
+async function syncFetch(id){
+  const cfg=syncCfg();if(!cfg.u||!cfg.k)return null;
+  try{const r=await fetch(cfg.u+(cfg.u.includes('?')?'&':'?')+'key='+encodeURIComponent(cfg.k)+'&id='+encodeURIComponent(id));const j=await r.json();return j.ok?j.state:null}catch(_){return null}}
+function saveQuote(){
+  const msg=$('#q-msg');
+  if(!baseRow()){msg.textContent='Chưa chọn cấu hình thang ở bước Thiết bị.';return}
+  const c=calc(),now=new Date().toISOString(),Q=loadQ();
+  let id=S.qid;if(!id){do{id=newId()}while(Q[id])}
+  Q[id]={state:JSON.stringify(S),total:Math.round(c.total),customer:S.cust.name||'',project:S.cust.proj||'',createdAt:(Q[id]&&Q[id].createdAt)||now,updatedAt:now};
+  S.qid=id;
+  if(!storeQ(Q)){msg.textContent='Trình duyệt đang chặn lưu trữ, không lưu được trên máy này. Hãy dùng mã chia sẻ.';return}
+  save();renderSum();refreshList();$('#q-msg').textContent='Đã lưu báo giá '+id+' trên máy này.';
+  if(syncCfg().u)syncSend(id,$('#q-msg'));
+}
+function openQuote(){
+  const msg=$('#open-msg'),raw=$('#open-id').value.trim();
+  if(!raw){msg.textContent='Nhập mã báo giá hoặc mã chia sẻ trước.';return}
+  try{
+    if(/^BGC1\./i.test(raw)){const st=JSON.parse(b64d(raw.slice(5)));
+      S=Object.assign(JSON.parse(JSON.stringify(DEF)),st);S.qid='';S.step=5;render();window.scrollTo({top:0});
+      $('#open-msg').textContent='Đã mở báo giá từ mã chia sẻ. Bấm Lưu báo giá để lưu trên máy này.';return}
+    const id=raw.toUpperCase(),Q=loadQ(),d=Q[id];
+    if(!d){if(syncCfg().u){msg.textContent='Đang tìm '+id+' trên Google Sheet…';syncFetch(id).then(stj=>{if(!stj){msg.textContent='Không tìm thấy mã '+id+' trên máy này hay trên Google Sheet.';return}S=Object.assign(JSON.parse(JSON.stringify(DEF)),JSON.parse(stj));S.qid=id;S.step=5;render();window.scrollTo({top:0});$('#open-msg').textContent='Đã mở báo giá '+id+' từ Google Sheet.'});return}
+      msg.textContent='Không tìm thấy mã '+id+' trên máy này. Nếu báo giá do người khác lập, hãy dán mã chia sẻ (bắt đầu bằng BGC1.).';return}
+    S=Object.assign(JSON.parse(JSON.stringify(DEF)),JSON.parse(d.state));S.qid=id;S.step=5;render();window.scrollTo({top:0});
+    const now=Math.round(calc().total);
+    $('#open-msg').textContent='Đã mở báo giá '+id+(Math.abs(now-d.total)>1?'. Giá hiện tại ('+fmt(now)+' đ) khác lúc lưu ('+fmt(d.total)+' đ) do bảng giá đã đổi.':'.');
+  }catch(e){msg.textContent='Mã không hợp lệ, hãy kiểm tra lại.'}
+}
+
+function quoteData(){
+  const c=calc(),f=baseRow()?fullSpec():null;
+  const d=new Date(),ds=String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+  return {c,f,ds,type:TYPES.find(t=>t.id===S.type).n};
+}
+function specRows(q){
+  if(!q.f)return [];
+  const f=q.f;
+  return [['Loại thang',q.type],['Tải trọng',S.load+' kg'],['Tốc độ',f.speed+' m/phút'],['Số điểm dừng',String(S.stops)],['Máy kéo',f.motor],['Tủ điều khiển',f.panel],['Cabin (rộng × sâu)',f.cabin+', cao '+f.cabinH+' mm'],['Cửa thang',f.door+', cao '+f.doorH+' mm']];
+}
+function fname(ext){const id=S.qid||'BG-'+(new Date().toISOString().slice(2,7).replace('-',''))+'-NEW';return id+(ext?'.'+ext:'')}
+function downloadBlob(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+
+/* PDF: dựng bản in rồi mở khung in của trình duyệt, chọn "Lưu thành PDF" */
+function printHtml(q){
+  const c=q.c,tot=[['Giá mỗi thang',fmt(c.per)]];
+  if(S.qty>1)tot.push(['Số lượng '+S.qty+' thang',fmt(c.gross)]);
+  if(c.disc)tot.push(['Chiết khấu sản lượng ('+c.tier+' triệu × '+S.qty+')','−'+fmt(c.disc)]);
+  if(S.markup)tot.push(['Điều chỉnh '+S.markup+'%',sgn(c.mk)]);
+  const kv=rows=>'<table class="kv">'+rows.map(r=>`<tr><th>${esc(r[0])}</th><td>${esc(r[1]||'—')}</td></tr>`).join('')+'</table>';
+  return `<div class="pa-head"><h1>BÁO GIÁ THANG MÁY</h1><div class="pa-meta">${S.qid?'Mã: <b>'+esc(S.qid)+'</b><br>':''}Ngày ${q.ds}<br>Giá năm 2026, đã gồm VAT<br>Giao tại nhà máy</div></div>
+  <h2>Thông tin khách hàng</h2>${kv([['Khách hàng',S.cust.name],['Công trình',S.cust.proj],['Liên hệ',S.cust.contact]])}
+  <h2>Cấu hình thang</h2>${kv(specRows(q))}
+  <h2>Chi tiết hạng mục (mỗi thang)</h2>
+  <table class="lines"><thead><tr><th style="width:28px">STT</th><th>Hạng mục</th><th class="r" style="width:120px">Thành tiền (đ)</th></tr></thead><tbody>
+  ${c.lines.map((l,i)=>`<tr><td>${i+1}</td><td>${esc(l.n)}<small>${esc(l.s)}</small></td><td class="r">${sgn(l.v)}</td></tr>`).join('')}</tbody></table>
+  <table class="tot">${tot.map(r=>`<tr><td>${esc(r[0])}</td><td class="r">${r[1]}</td></tr>`).join('')}<tr class="g"><td>TỔNG CỘNG (đ)</td><td class="r">${fmt(c.total)}</td></tr></table>
+  <h2>Điều kiện</h2><ul><li>Giá đã gồm VAT, giao tại nhà máy. Chưa gồm lắp đặt, vận hành, phí kiểm định, cấp phép và bảo trì.</li><li>Bảo hành 12 tháng kể từ ngày giao hàng. Có bản vẽ lắp đặt và hồ sơ CO, CQ.</li><li>Sản xuất và giao hàng nhanh nhất 15 ngày. Vật tư nhập khẩu hoặc phi tiêu chuẩn mất 30–45 ngày làm việc kể từ lần thanh toán đầu.</li><li>Thanh toán 2 đợt: 40% khi ký, phần còn lại trong 7 ngày sau khi xuất kho.</li></ul>`;
+}
+function exportPrint(){
+  const msg=$('#dl-msg'),q=quoteData();
+  if(!q.f){msg.textContent='Chưa chọn cấu hình thang ở bước Thiết bị.';return}
+  $('#print-area').innerHTML=printHtml(q);
+  const old=document.title;document.title=fname('');
+  const done=()=>{document.title=old;window.removeEventListener('afterprint',done)};
+  window.addEventListener('afterprint',done);
+  msg.textContent='Đang mở khung in. Nếu không thấy khung in, hãy mở file này trực tiếp bằng Chrome, Edge hoặc Safari (không xem trước trong ứng dụng khác), hoặc dùng nút Tải báo giá PDF.';
+  setTimeout(()=>window.print(),50);
+}
+
+
+/* PDF tải thẳng: vẽ báo giá lên canvas rồi ghép thành file PDF (không cần khung in, không cần thư viện) */
+function pdfPages(q){
+  const W=1240,H=1754,MX=96,MY=104,CW=W-2*MX,pages=[];let cv,cx,y;
+  const F=(px,w)=>`${w||400} ${px}px "Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif`;
+  const INK='#1b2328',MUT='#5d6a72',ACC='#0d6b6e',LINE='#cfd6d9',NEG='#b3402a';
+  function np(){cv=document.createElement('canvas');cv.width=W;cv.height=H;cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,W,H);cx.textBaseline='alphabetic';y=MY;pages.push(cv)}
+  function wrap(t,mw,f){cx.font=f;const out=[];String(t).split('\n').forEach(par=>{let line='';par.split(' ').forEach(w=>{const tt=line?line+' '+w:w;if(cx.measureText(tt).width>mw&&line){out.push(line);line=w}else line=tt});out.push(line)});return out}
+  function ens(h){if(y+h>H-MY)np()}
+  function txt(t,x,yy,f,c,al){cx.font=f;cx.fillStyle=c;cx.textAlign=al||'left';cx.fillText(t,x,yy)}
+  function hl(yy,c,wd){cx.strokeStyle=c||LINE;cx.lineWidth=wd||1.5;cx.beginPath();cx.moveTo(MX,yy);cx.lineTo(W-MX,yy);cx.stroke()}
+  function h2(t){ens(90);y+=34;txt(t.toUpperCase(),MX,y,F(22,600),ACC);y+=14;hl(y,ACC,2);y+=10}
+  function kv(rows){rows.forEach(r=>{const ls=wrap(r[1]||'—',CW-300,F(26,500));ens(ls.length*36+14);
+      txt(r[0],MX,y+30,F(24),MUT);ls.forEach((l,i)=>txt(l,MX+300,y+30+i*36,F(26,500),INK));y+=ls.length*36+10;hl(y)})}
+  np();
+  txt('BÁO GIÁ THANG MÁY',MX,y+44,F(54,700),ACC);
+  const meta=[...(S.qid?['Mã: '+S.qid]:[]),'Ngày '+q.ds,'Giá năm 2026, đã gồm VAT','Giao tại nhà máy'];
+  meta.forEach((m,i)=>txt(m,W-MX,y+14+i*30,F(22),MUT,'right'));y+=meta.length*30+16;hl(y,INK,2.5);
+  h2('Thông tin khách hàng');kv([['Khách hàng',S.cust.name],['Công trình',S.cust.proj],['Liên hệ',S.cust.contact]]);
+  h2('Cấu hình thang');kv(specRows(q));
+  h2('Chi tiết hạng mục (mỗi thang)');
+  const cAmt=250,cNo=70,cName=CW-cAmt-cNo-20;
+  ens(70);cx.fillStyle=ACC;cx.fillRect(MX,y,CW,52);
+  txt('STT',MX+14,y+34,F(20,600),'#fff');txt('HẠNG MỤC',MX+cNo+14,y+34,F(20,600),'#fff');txt('THÀNH TIỀN (đ)',W-MX-14,y+34,F(20,600),'#fff','right');y+=52;
+  q.c.lines.forEach((l,i)=>{const nl=wrap(l.n,cName,F(25,500)),sl=wrap(l.s,cName,F(21)),h=nl.length*34+sl.length*28+22;ens(h);
+    txt(String(i+1),MX+14,y+34,F(23),MUT);
+    nl.forEach((s,k)=>txt(s,MX+cNo+14,y+34+k*34,F(25,500),INK));
+    sl.forEach((s,k)=>txt(s,MX+cNo+14,y+34+nl.length*34+k*28-4,F(21),MUT));
+    txt(sgn(l.v),W-MX-14,y+34,F(25,500),l.v<0?NEG:INK,'right');y+=h;hl(y)});
+  const c=q.c,tot=[['Giá mỗi thang',fmt(c.per)]];
+  if(S.qty>1)tot.push(['Số lượng '+S.qty+' thang',fmt(c.gross)]);
+  if(c.disc)tot.push(['Chiết khấu sản lượng ('+c.tier+' triệu × '+S.qty+')','−'+fmt(c.disc)]);
+  if(S.markup)tot.push(['Điều chỉnh '+S.markup+'%',sgn(c.mk)]);
+  ens(tot.length*44+110);y+=18;
+  tot.forEach(r=>{txt(r[0],W-MX-300,y+30,F(24),MUT,'right');txt(r[1],W-MX-14,y+30,F(25,500),INK,'right');y+=44});
+  y+=4;cx.strokeStyle=INK;cx.lineWidth=3;cx.beginPath();cx.moveTo(W-MX-700,y);cx.lineTo(W-MX,y);cx.stroke();y+=44;
+  txt('TỔNG CỘNG (đ)',W-MX-300,y,F(28,700),INK,'right');txt(fmt(c.total),W-MX-14,y,F(32,700),ACC,'right');y+=30;
+  h2('Điều kiện');
+  ['Giá đã gồm VAT, giao tại nhà máy. Chưa gồm lắp đặt, vận hành, phí kiểm định, cấp phép và bảo trì.','Bảo hành 12 tháng kể từ ngày giao hàng. Có bản vẽ lắp đặt và hồ sơ CO, CQ.','Sản xuất và giao hàng nhanh nhất 15 ngày. Vật tư nhập khẩu hoặc phi tiêu chuẩn mất 30–45 ngày làm việc kể từ lần thanh toán đầu.','Thanh toán 2 đợt: 40% khi ký, phần còn lại trong 7 ngày sau khi xuất kho.'].forEach(t=>{
+    const ls=wrap(t,CW-40,F(23));ens(ls.length*32+12);y+=8;txt('•',MX+8,y+24,F(23),MUT);ls.forEach((l,k)=>txt(l,MX+40,y+24+k*32,F(23),MUT));y+=ls.length*32});
+  pages.forEach((p,i)=>{const g=p.getContext('2d');g.font=F(20);g.fillStyle=MUT;g.textAlign='center';g.fillText('Trang '+(i+1)+'/'+pages.length,W/2,H-50)});
+  return pages;
+}
+function buildPdf(imgs){
+  const enc=new TextEncoder(),chunks=[],offs=[];let len=0;
+  const push=b=>{if(typeof b==='string')b=enc.encode(b);chunks.push(b);len+=b.length};
+  const obj=(id,fn)=>{offs[id]=len;push(id+' 0 obj\n');fn();push('\nendobj\n')};
+  push('%PDF-1.4\n');push(new Uint8Array([0x25,0xE2,0xE3,0xCF,0xD3,0x0A]));
+  const n=imgs.length;
+  obj(1,()=>push('<< /Type /Catalog /Pages 2 0 R >>'));
+  obj(2,()=>push('<< /Type /Pages /Kids ['+imgs.map((_,i)=>(3+3*i)+' 0 R').join(' ')+'] /Count '+n+' >>'));
+  imgs.forEach((j,i)=>{const pg=3+3*i,cs='q 595 0 0 842 0 0 cm /Im0 Do Q';
+    obj(pg,()=>push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /XObject << /Im0 ${pg+2} 0 R >> >> /Contents ${pg+1} 0 R >>`));
+    obj(pg+1,()=>push(`<< /Length ${cs.length} >>\nstream\n${cs}\nendstream`));
+    obj(pg+2,()=>{push(`<< /Type /XObject /Subtype /Image /Width ${j.w} /Height ${j.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${j.data.length} >>\nstream\n`);push(j.data);push('\nendstream')})});
+  const xref=len,total=3*n+3;
+  push(`xref\n0 ${total}\n0000000000 65535 f \n`);
+  for(let id=1;id<total;id++)push(String(offs[id]).padStart(10,'0')+' 00000 n \n');
+  push(`trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
+  return new Blob(chunks,{type:'application/pdf'});
+}
+async function exportPdf(){
+  if(!S.qid&&baseRow())saveQuote();
+  const msg=$('#dl-msg'),q=quoteData();
+  if(!q.f){msg.textContent='Chưa chọn cấu hình thang ở bước Thiết bị.';return}
+  msg.textContent='Đang tạo PDF…';
+  try{
+    try{if(document.fonts&&document.fonts.ready)await document.fonts.ready}catch(_){}
+    const imgs=pdfPages(q).map(cv=>{const u=cv.toDataURL('image/jpeg',0.92).split(',')[1],b=atob(u),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return {w:cv.width,h:cv.height,data:a}});
+    downloadBlob(fname('pdf'),buildPdf(imgs));
+    msg.textContent='Đã tạo file '+fname('pdf')+'. Kiểm tra thư mục Tải xuống. Nếu không thấy file, hãy mở trang này trực tiếp bằng Chrome, Edge hoặc Safari.';
+  }catch(e){msg.textContent='Không tạo được PDF. Thử nút In báo giá thay thế.'}
+}
+
+/* Excel: tự ghi file .xlsx (không cần thư viện) với công thức số lượng × đơn giá */
+const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+function crc32(b){let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=CRC[(c^b[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0}
+function zipStore(files){
+  const enc=new TextEncoder(),parts=[],cen=[];let off=0;
+  const u16=n=>[n&255,(n>>8)&255],u32=n=>[n&255,(n>>8)&255,(n>>16)&255,(n>>>24)&255];
+  files.forEach(f=>{const nm=enc.encode(f.name),d=enc.encode(f.data),crc=crc32(d);
+    const lh=new Uint8Array([0x50,0x4b,3,4,...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(d.length),...u32(d.length),...u16(nm.length),...u16(0)]);
+    parts.push(lh,nm,d);
+    cen.push(new Uint8Array([0x50,0x4b,1,2,...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(d.length),...u32(d.length),...u16(nm.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(off)]),nm);
+    off+=lh.length+nm.length+d.length});
+  const cl=cen.reduce((a,b)=>a+b.length,0);
+  const end=new Uint8Array([0x50,0x4b,5,6,...u16(0),...u16(0),...u16(files.length),...u16(files.length),...u32(cl),...u32(off),...u16(0)]);
+  return new Blob([...parts,...cen,end],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+const xe=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function xlsxBlob(rows,bold,widths){
+  const col=i=>String.fromCharCode(65+i);
+  let sd='';
+  rows.forEach((r,ri)=>{const n=ri+1;let cs='';
+    r.forEach((c,ci)=>{if(c===''||c==null)return;const ref=col(ci)+n,b=bold.has(n);
+      if(typeof c==='object'&&c.f)cs+=`<c r="${ref}" s="${b?3:1}"><f>${xe(c.f)}</f><v>${c.v}</v></c>`;
+      else if(typeof c==='number')cs+=`<c r="${ref}" s="${b?3:1}"><v>${c}</v></c>`;
+      else cs+=`<c r="${ref}" t="inlineStr" s="${b?2:0}"><is><t xml:space="preserve">${xe(c)}</t></is></c>`});
+    sd+=`<row r="${n}">${cs}</row>`});
+  const sheet=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols>${widths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('')}</cols><sheetData>${sd}</sheetData></worksheet>`;
+  const H='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+  return zipStore([
+   {name:'[Content_Types].xml',data:H+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'},
+   {name:'_rels/.rels',data:H+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'},
+   {name:'xl/workbook.xml',data:H+'<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Báo giá" sheetId="1" r:id="rId1"/></sheets><calcPr fullCalcOnLoad="1"/></workbook>'},
+   {name:'xl/_rels/workbook.xml.rels',data:H+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'},
+   {name:'xl/styles.xml',data:H+'<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="3" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="3" fontId="1" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1"/></cellXfs></styleSheet>'},
+   {name:'xl/worksheets/sheet1.xml',data:sheet}]);
+}
+function exportXlsx(){
+  if(!S.qid&&baseRow())saveQuote();
+  const msg=$('#dl-msg'),q=quoteData();
+  if(!q.f){msg.textContent='Chưa chọn cấu hình thang ở bước Thiết bị.';return}
+  const c=q.c,rows=[['BÁO GIÁ THANG MÁY'],['Mã báo giá',S.qid||''],['Ngày',q.ds],['Giá năm 2026, đã gồm VAT, giao tại nhà máy'],[],
+   ['Khách hàng',S.cust.name],['Công trình',S.cust.proj],['Liên hệ',S.cust.contact],[],['CẤU HÌNH THANG'],...specRows(q),[],
+   ['STT','Hạng mục','ĐVT','Số lượng','Đơn giá (đ)','Thành tiền (đ)','Ghi chú']];
+  const bold=new Set([1,10,rows.length]);const first=rows.length+1;
+  c.lines.forEach((l,i)=>{const r=first+i;rows.push([i+1,l.n,l.u||'',l.q,Math.round(l.p),{f:`D${r}*E${r}`,v:Math.round(l.q*l.p)},l.s])});
+  const last=rows.length;rows.push([]);
+  const lab=(txt,val)=>rows.push(['','','','',txt,val]);
+  lab('Giá mỗi thang (đ)',{f:`SUM(F${first}:F${last})`,v:Math.round(c.per)});const rPer=rows.length;
+  lab('Số lượng thang',S.qty);const rQ=rows.length;
+  lab('Chiết khấu sản lượng (đ/thang)',-Math.round(c.tier*M));const rD=rows.length;
+  lab('Điều chỉnh giá bán (%)',S.markup);const rM=rows.length;
+  lab('TỔNG CỘNG (đ)',{f:`(F${rPer}+F${rD})*F${rQ}*(1+F${rM}/100)`,v:Math.round(c.total)});bold.add(rows.length);
+  downloadBlob(fname('xlsx'),xlsxBlob(rows,bold,[8,70,8,10,16,18,44]));
+  msg.textContent='Đã tạo file '+fname('xlsx')+'. Kiểm tra thư mục Tải xuống.';
+}
+
+/* ---------- Các bước ---------- */
+const STEPS=['Loại thang','Số tầng','Thiết bị','Nội thất cabin','Cửa và bao che','Báo giá'];
+
+function rowsHtml(list,filter){
+  if(!list.length)return '<div class="empty">Không có mục nào.</div>';
+  return '<div class="items">'+list.map(it=>{
+    const on=it.id in S.sel;
+    return `<label class="it${on?' on':''}" data-name="${esc(it.name.toLowerCase())}"><input type="checkbox" data-id="${it.id}"${on?' checked':''}><span class="nm">${esc(it.cat==='vlon'?it.name.replace(/^Thay tấm vách lớn trong\s+cabin\s+từ\s+[Ii]nox gương trắng sang\s+/,'Gương trắng → '):it.name)}</span><span class="pr ${it.price<0?'neg':'pos'}">${sgn(it.price)} đ</span><span class="un">/${esc(it.unit)}</span>`+
+      (on&&it.cat==='bcday'?`<span class="q">${S.stops} cửa tầng × ${unit(it.price)} đ = ${sgn(it.price*S.stops)} đ</span>`:on?`<span class="q">Số lượng <button type="button" class="qb" data-qstep="${it.id}" data-d="-1" aria-label="Giảm">−</button><input type="number" min="1" step="1" value="${S.sel[it.id]}" data-qty="${it.id}" aria-label="Số lượng"><button type="button" class="qb" data-qstep="${it.id}" data-d="1" aria-label="Tăng">+</button> ${esc(it.unit)}${it.cat==='cua'?` <em style="font-style:normal">(gợi ý ${S.stops} cửa tầng + 1 cửa cabin, sửa được)</em>`:''}</span>`:'')+`</label>`}).join('')+'</div>';
+}
+const GROUPS={cd:['cuaday'],bc:['baoche'],cu:['cua'],vl:['vlon'],vg:['vgoc1','vgoc2','vgoc3'],mk:['maykeo','maykeo2'],td:['tudieu'],cb:['combo'],tg:['trangia'],tv:['tayvin'],od:['opdong'],mg:['mathang']};
+function singleHtml(list,group,noneLabel){
+  const cur=list.find(i=>i.id in S.sel);
+  const short=n=>n.replace(/^Thay tấm vách lớn trong\s+cabin\s+từ\s+[Ii]nox gương trắng sang\s+/,'Gương trắng → ')
+    .replace(/^Bao che rộng từ\s+/i,'').replace(/^Bao che hẹp từ\s+/i,'').replace(/^Bao che bản hẹp sọc nhuyễn trắng chuyển sang bao che bản rộng\s*–\s*/i,'Sọc nhuyễn trắng → ').replace(/\binox\b/gi,'inox').replace(/\s+sang\s+/g,' → ').replace(/^Inox/,'Inox');
+  const row=(id,nm0,pr,un,on)=>{const nm=short(nm0);return `<label class="it${on?' on':''}"${id?` data-name="${esc(nm.toLowerCase())}"`:''}><input type="radio" name="${group}" data-single="${group}" value="${id}"${on?' checked':''}><span class="nm">${esc(nm)}</span><span class="pr ${pr<0?'neg':'pos'}">${id?sgn(pr)+' đ':'+0 đ'}</span><span class="un">${un?'/'+esc(un):''}</span></label>`};
+  return '<div class="items">'+(noneLabel?row('',noneLabel,0,'',!cur):'')+list.map(it=>row(it.id,it.name,it.price,it.unit,cur&&cur.id===it.id)).join('')+'</div>';
+}
+const cat=(...c)=>ITEMS.filter(i=>c.includes(i.cat)&&!(c.includes('butong')&&false));
+const butCab=()=>ITEMS.filter(i=>i.cat==='butong'&&!/^Butong tầng/.test(i.name));
+const butTang=()=>ITEMS.filter(i=>i.cat==='butong'&&/^Butong tầng/.test(i.name));
+
+function stepHtml(i){
+  if(i===0)return `<h2>Chọn loại thang</h2><p class="lead">Loại thang quyết định bảng giá, tải trọng và tốc độ có thể chọn ở các bước sau.</p>
+   <div class="cards">${TYPES.map(t=>`<button type="button" class="card${S.type===t.id?' on':''}" data-act="type" data-v="${t.id}"><b>${t.n}</b><span>${t.d}</span></button>`).join('')}</div>`;
+  if(i===1){const a=stopAdj();return `<h2>Số tầng (điểm dừng)</h2><p class="lead">Bảng giá tính sẵn cho 5 điểm dừng. Mỗi điểm dừng tăng hoặc giảm sẽ cộng hoặc trừ theo tải trọng.</p>
+   <div class="stepper"><button type="button" data-act="stops" data-v="-1" aria-label="Giảm một tầng">−</button><output>${S.stops}</output><button type="button" data-act="stops" data-v="1" aria-label="Tăng một tầng">+</button></div>
+   <div class="note">${a.txt}: <b class="mono">${sgn(a.v)} triệu</b>. Áp dụng với thang tối đa 9 điểm dừng, chiều cao tầng không quá 3,6 m.</div>`}
+  if(i===2){
+    const ready=!!baseRow();
+        let h=`<h2>Thiết bị</h2><p class="lead">Chọn tải trọng và tốc độ trước. Giá cơ sở là cấu hình thấp nhất đáp ứng tải trọng và tốc độ đó. Máy kéo, tủ và các hạng mục khác được cộng thêm vào giá cơ sở.</p>
+    <h3>Tải trọng</h3><div class="cards">${allLoads().map(l=>`<button type="button" class="card${S.load===l?' on':''}" data-act="load" data-v="${l}"><b>${l} kg</b><span>${Math.round(l/75)} người</span></button>`).join('')}</div>`;
+    if(S.type==='std')h+=`<h3>Tốc độ</h3><div class="cards">${[60,90].map(v=>`<button type="button" class="card${S.speed===v?' on':''}" data-act="speed" data-v="${v}"><b>${v} m/phút</b><span>${v===60?'Tiêu chuẩn':'Cộng thêm so với 60 m/phút'}</span></button>`).join('')}</div>`;
+    else h+=`<h3>Tốc độ</h3><div class="cards"><div class="card on"><b>30 m/phút</b><span>Cố định với loại thang này</span></div></div>`;
+    if(S.type==='hinge')h+=`<h3>Kiểu cửa bản lề</h3><div class="cards">${DOORS.map((d,k)=>`<button type="button" class="card${S.door===k?' on':''}" data-act="door" data-v="${k}"><b>${d.n}</b><span>${d.dim}</span></button>`).join('')}</div>`;
+    if(!baseRow()){h+=`<div class="note">${S.load&&ready?'Không có máy kéo tiêu chuẩn cho cấu hình này, hãy đổi tải trọng hoặc tốc độ.':'Chọn '+(S.type==='std'?'tải trọng và tốc độ':S.type==='hinge'?'tải trọng và kiểu cửa':'tải trọng')+' để xem các máy kéo phù hợp.'}</div>`;return h}
+    const sw=ITEMS.filter(i=>(i.cat==='maykeo'||i.cat==='maykeo2')&&motorOk(i));
+    h+=specHtml();
+    h+=`<p class="sub" style="margin-top:6px">Kích thước cabin và cửa không được đổi lớn hơn mức tiêu chuẩn. Số liệu kích thước là khoảng tham khảo từ bảng giá.</p>
+    <h3>Đổi máy kéo khác</h3><p class="sub" style="margin:-4px 0 8px">Chỉ hiện máy cùng cấp tải trọng và đúng tốc độ đã chọn. Mỗi thang chỉ dùng một máy kéo, giá tính trên cấu hình tiêu chuẩn thấp nhất.</p>
+    ${singleHtml(sw,'mk','Dùng máy kéo tiêu chuẩn đã chọn ở trên')}
+    <h3>Đổi tủ điều khiển</h3><p class="sub" style="margin:-4px 0 8px">Mỗi thang chỉ dùng một tủ điều khiển. Khi đổi sang máy kéo ngoài ở trên, tủ EC3000E được chọn sẵn, bạn vẫn đổi lại được.</p>
+    ${singleHtml(cat('tudieu'),'td','Giữ tủ điều khiển tiêu chuẩn')}`;
+    h+=`
+    <h3>Ray cabin và đối trọng</h3>
+    <div class="items">
+     <label class="it${S.rayT89?' on':''}"><input type="checkbox" data-flag="rayT89"${S.rayT89?' checked':''}><span class="nm">Ray cabin T89 thay T78</span><span class="pr pos">+800.000 đ</span><span class="un">/tầng</span></label>
+     <label class="it${S.rayTH5A?' on':''}"><input type="checkbox" data-flag="rayTH5A"${S.rayTH5A?' checked':''}><span class="nm">Ray đối trọng TH5A (ray tôn uốn) thay T78</span><span class="pr neg">−400.000 đ</span><span class="un">/tầng</span></label>
+    </div>`;
+    return h}
+  if(i===3){const gl=S.cabKind==='glass';const cmb=ITEMS.filter(x=>x.cat==='combo'&&['combo56','combo57','combo58','combo59'].includes(x.id)===gl);const dt=(gl?(S.cabMode!=='combo'&&(S.glassN||3)===1?ITEMS.filter(x=>x.id==='khac114'):[]):ITEMS.filter(x=>x.cat==='doitrong'&&/không sử dụng vách kính/.test(x.name))).concat(cat('khac'));
+  if(S.cabMode==='combo'&&!cmb.some(x=>x.id in S.sel))S.sel[cmb[0].id]=1;
+  return `<h2>Nội thất cabin</h2><p class="lead">Bản tiêu chuẩn dùng inox sọc nhuyễn hoặc inox gương trắng dày 1,2 mm. Chọn loại cabin, sau đó chọn cách làm nội thất: dùng một combo trọn gói, hoặc chọn riêng từng vùng. Giá là phần chênh lệch so với tiêu chuẩn.</p>
+
+    <h3>Loại cabin</h3><div class="cards" style="margin-bottom:10px"><button type="button" class="card${!gl?' on':''}" data-act="cabkind" data-v="normal"><b>Cabin thường</b><span>Vách inox, gương hoặc sọc màu</span></button><button type="button" class="card${gl?' on':''}" data-act="cabkind" data-v="glass"><b>Cabin kính</b><span>Vách kính cường lực 10 mm, khung inox</span></button></div>
+    <h3>Độ dày inox</h3><div class="cards" style="margin-bottom:10px">${[['1.2','1,2 mm','Tiêu chuẩn','+0 đ'],['1.0','1,0 mm','Mỏng hơn','−4.000.000 đ'],['1.5','1,5 mm','Dày hơn','+6.500.000 đ']].map(x=>`<button type="button" class="card${inoxV()===x[0]?' on':''}" data-act="inox" data-v="${x[0]}"><b>${x[1]}</b><span>${x[2]}</span><span class="p">${x[3]}</span></button>`).join('')}</div>
+    <div class="items" style="margin-bottom:6px">
+     <label class="it${S.cabMode==='combo'?' on':''}"><input type="radio" name="cabmode" data-cab="combo"${S.cabMode==='combo'?' checked':''}><span class="nm">Dùng combo cabin<small class="sub" style="display:block">Gói trọn bộ: vách, trần giả, tay vịn, butong cabin, cửa cabin</small></span><span class="pr"></span><span class="un"></span></label>
+     <label class="it${S.cabMode!=='combo'?' on':''}"><input type="radio" name="cabmode" data-cab="zone"${S.cabMode!=='combo'?' checked':''}><span class="nm">Không dùng combo, chọn từng vùng<small class="sub" style="display:block">Vách, trần giả, tay vịn, butong và mặt gọi, ốp dóng</small></span><span class="pr"></span><span class="un"></span></label>
+    </div>
+    ${S.cabMode==='combo'?`    <h3>Combo cabin</h3><p class="sub" style="margin:-4px 0 8px">Mỗi cabin chỉ chọn một combo. Combo đã gồm vách, trần giả, tay vịn và cửa cabin, nên khi chọn combo không chọn thêm các món trùng bên dưới.</p>${singleHtml(cmb,'cb','')}
+`:`    <h3>Vách cabin</h3><div class="row" style="margin-bottom:4px"><input type="text" id="q-vach" placeholder="Lọc vách: vàng, đồng, đen, ăn mòn…" style="flex:1;min-width:200px"></div>
+    <div id="vach-wrap">
+    ${gl?`<h4 class="sg">Số vách kính</h4><div class="cards">${[1,2,3].map(n=>`<button type="button" class="card${(S.glassN||3)===n?' on':''}" data-act="glassn" data-v="${n}"><b>${n} vách kính</b><span>${n===3?'Cả 3 vách':n===1?'1 vách':'2 vách'}</span></button>`).join('')}</div>
+    <h4 class="sg">Khung và gương viền</h4><div class="cards">${['vach47','vach48','vach49','vach50'].map(id=>{const f=byId[id],t={vach47:'Sọc nhuyễn',vach48:'Sọc vàng, gương vàng',vach49:'Sọc đồng, gương đồng',vach50:'Sọc đen, gương đen'}[id];return `<button type="button" class="card${(S.glassF||'vach47')===id?' on':''}" data-act="glassf" data-v="${id}"><b>${t}</b><span class="p">+${fmt(f.price)} đ / vách</span></button>`}).join('')}</div>
+    <p class="sub" style="margin:6px 0 0">Kính cường lực dày 10 mm, giá tính theo số vách. Muốn trọn gói 3 vách kèm trần giả, mặt gọi, tay vịn thì chọn "Dùng combo cabin" ở trên.</p>`:`<h4 class="sg">Đổi tấm vách lớn (chỉ 1 tấm)</h4>${singleHtml(cat('vlon'),'vl','Giữ tấm vách lớn gương trắng')}
+    <h4 class="sg">Phối vách góc và vách giữa</h4>${vgocHtml()}
+`}
+    </div>
+    <h3>Trần giả</h3>${singleHtml(cat('trangia'),'tg','Trần giả tiêu chuẩn')}
+    <h3>Tay vịn</h3>${singleHtml(cat('tayvin'),'tv','Tay vịn tròn tiêu chuẩn')}
+    <h3>Butong và mặt gọi trong cabin</h3>${rowsHtml(butCab())}<p class="sub" style="margin:10px 0 6px">Mặt gọi trong cabin, chọn một loại:</p>${singleHtml(cat('mathang'),'mg','Mặt button LED tiêu chuẩn')}
+    <h3>Ốp dóng cabin</h3>${singleHtml(cat('opdong'),'od','Không ốp dóng cabin')}
+`}
+    <h3>Sàn cabin</h3><div class="items">${SAN.map(s=>`<label class="it${S.san===s[0]?' on':''}"><input type="radio" name="san" data-san="${s[0]}"${S.san===s[0]?' checked':''}><span class="nm">${s[1]}</span><span class="pr pos">${s[2]?'+'+fmt(s[2]*M)+' đ':'Tiêu chuẩn'}</span><span class="un">/sàn</span></label>`).join('')}</div>
+    <h3>Ốp che quả đối trọng và chi tiết khác</h3>${rowsHtml(dt)}`;}
+  if(i===4)return `<h2>Cửa và bao che</h2><p class="lead">Cửa cabin và cửa tầng tính theo ${S.stops} điểm dừng đã chọn.</p>
+    <h3>Độ dày inox cửa</h3><div class="cards" style="margin-bottom:6px">${[['','1,0 mm','Tiêu chuẩn','+0 đ'],['cua73','1,2 mm','Dày hơn','+400.000 đ / bộ'],['cua74','1,5 mm','Dày hơn','+800.000 đ / bộ']].map(x=>`<button type="button" class="card${(x[0]?x[0] in S.sel:!('cua73' in S.sel||'cua74' in S.sel))?' on':''}" data-act="cuaday" data-v="${x[0]}"><b>${x[1]}</b><span>${x[2]}</span><span class="p">${x[3]}</span></button>`).join('')}</div><p class="sub" style="margin:0 0 10px">Tính cho 1 cửa cabin và ${S.stops} cửa tầng.</p>
+    <h3>Đổi vật liệu cánh cửa</h3><p class="sub" style="margin:-4px 0 8px">Chỉ chọn một loại. Loại đã chọn áp dụng cho cả cửa cabin và tất cả cửa tầng: ${S.stops} tầng gồm 1 cửa cabin và ${S.stops} cửa tầng.</p>
+    ${(()=>{const dg=S.doorGlass;return `<div class="cards" style="margin:0 0 10px;grid-template-columns:repeat(2,minmax(0,1fr))"><button type="button" class="card${!dg?' on':''}" data-act="doorkind" data-v="normal"><b>Cửa thường</b><span>Inox sọc, gương</span></button><button type="button" class="card${dg?' on':''}" data-act="doorkind" data-v="glass"><b>Cửa kính</b><span>Khung inox + kính 10 mm, +3.500.000 đ / bộ</span></button></div>`+(dg?singleHtml(cat('cua').filter(i=>isGD(i)&&i.id!=='cua68'),'cu','Cửa kính tiêu chuẩn (khung inox sọc trắng + kính 10 mm)'):singleHtml(cat('cua').filter(i=>!isGD(i)),'cu','Giữ vật liệu cánh cửa tiêu chuẩn'))})()}${doorNote()}
+    ${S.type==='std'?`    <h3>Đổi kiểu cửa</h3><p class="sub" style="margin:-4px 0 8px">Chọn một kiểu. Hệ thống tự tính cho 1 cửa cabin và ${S.stops} cửa tầng.</p>
+    <div class="items">
+     <label class="it${!S.doorKind?' on':''}"><input type="radio" name="dk" data-dk="" ${!S.doorKind?'checked':''}><span class="nm">Giữ kiểu cửa tiêu chuẩn</span><span class="pr pos">+0 đ</span><span class="un"></span></label>
+     ${Object.entries(DK).map(([k,d])=>`<label class="it${S.doorKind===k?' on':''}"><input type="radio" name="dk" data-dk="${k}" ${S.doorKind===k?'checked':''}><span class="nm">${d.n}<small class="sub" style="display:block">Cabin ${fmt(d.cab.price)} + cửa tầng ${S.stops} × ${fmt(d.tang.price)}</small></span><span class="pr pos">${sgn(d.cab.price+d.tang.price*S.stops)} đ</span><span class="un"></span></label>`).join('')}
+    </div>`:`<h3>Kiểu cửa</h3><div class="note">Thang Homlif dùng hệ cửa riêng theo bảng giá, nên không có tuỳ chọn đổi kiểu cửa.</div>`}
+    <h3>Bao che cửa tầng</h3><p class="sub" style="margin:-4px 0 8px">Chọn một loại, áp dụng cho tất cả ${S.stops} cửa tầng.</p>
+    <p class="sub" style="margin:6px 0 4px"><b>Bao che rộng</b></p>${singleHtml(ITEMS.filter(i=>i.cat==='baoche'&&/^Bao che rộng/.test(i.name)),'bc','Giữ bao che tiêu chuẩn')}
+    <p class="sub" style="margin:10px 0 4px"><b>Bao che hẹp</b></p>${singleHtml(ITEMS.filter(i=>i.cat==='baoche'&&/^Bao che hẹp/.test(i.name)),'bc',null)}
+    <p class="sub" style="margin:10px 0 4px"><b>Đổi từ bản hẹp sang bản rộng</b></p>${singleHtml(ITEMS.filter(i=>i.cat==='baoche'&&/^Bao che bản hẹp/.test(i.name)),'bc',null)}
+    ${(()=>{const it=ITEMS.find(i=>i.cat==='baoche'&&i.id in S.sel);return it?`<div class="note" style="background:var(--accent-soft)">${S.stops} cửa tầng × ${unit(it.price)} đ = <b class="mono">${sgn(it.price*S.stops)} đ</b></div>`:''})()}
+    <h3>Độ dày inox bao che</h3><p class="sub" style="margin:-4px 0 8px">Chọn riêng cho từng loại bao che, không phụ thuộc lựa chọn ở trên. Mỗi loại tính cho ${S.stops} cửa tầng.</p>${rowsHtml(cat('bcday'))}
+    <h3>Butong tầng</h3>${rowsHtml(butTang())}`;
+  return reviewHtml();
+}
+function reviewHtml(){
+  const c=calc();
+  return `<h2>Báo giá</h2><p class="lead">Kiểm tra lại các hạng mục, nhập thông tin khách và số lượng thang. Dùng nút Sao chép ở khung bên phải để gửi báo giá.</p>
+  <h3>Thông tin khách hàng</h3>
+  <div class="form">
+   <label>Tên khách hàng<input type="text" id="c-name" value="${esc(S.cust.name)}"></label>
+   <label>Công trình<input type="text" id="c-proj" value="${esc(S.cust.proj)}"></label>
+   <label>Liên hệ<input type="text" id="c-contact" value="${esc(S.cust.contact)}"></label>
+  </div>
+  <h3>Số lượng và chiết khấu</h3>
+  <div class="form">
+   <label>Số lượng thang trong báo giá<input type="number" id="f-qty" min="1" value="${S.qty}"></label>
+   <label>Sản lượng cam kết cả năm (thang)<input type="number" id="f-annual" min="0" value="${S.annual}"></label>
+   <label>Điều chỉnh giá bán thêm (%)<input type="number" id="f-mk" step="0.5" value="${S.markup}"></label>
+  </div>
+  <p class="sub" style="margin-top:8px">Chiết khấu thang nguyên chiếc theo sản lượng cam kết: 20–36 thang giảm 3 triệu, 37–59 giảm 4 triệu, 60–71 giảm 5 triệu, từ 72 giảm 6 triệu mỗi thang. Hiện áp dụng: <b>${c.tier?c.tier+' triệu/thang':'chưa đạt mức nào'}</b>.</p>
+  <h3>Chi tiết hạng mục (mỗi thang)</h3>
+  <div class="tbl"><table><thead><tr><th>Hạng mục</th><th class="r">Thành tiền</th></tr></thead><tbody>
+   ${c.lines.map(l=>`<tr><td>${esc(l.n)}<br><small class="sub">${esc(l.s)}</small></td><td class="r ${l.v<0?'neg':''}">${sgn(l.v)}</td></tr>`).join('')}
+   <tr><td><b>Giá mỗi thang</b></td><td class="r"><b>${fmt(c.per)}</b></td></tr></tbody></table></div>
+  <h3>Điều kiện</h3>
+  <ul class="sub" style="margin:0;padding-left:18px;max-width:70ch">
+   <li>Giá đã gồm VAT, giao tại nhà máy VPTECH Hà Nam. Chưa gồm lắp đặt, vận hành, phí kiểm định, cấp phép và bảo trì.</li>
+   <li>Bảo hành 12 tháng kể từ ngày giao hàng. Có bản vẽ lắp đặt và hồ sơ CO, CQ.</li>
+   <li>Sản xuất và giao hàng nhanh nhất 15 ngày. Vật tư nhập khẩu hoặc phi tiêu chuẩn mất 30–45 ngày làm việc kể từ lần thanh toán đầu.</li>
+   <li>Thanh toán 2 đợt: 40% khi ký, phần còn lại trong 7 ngày sau khi xuất kho.</li></ul>
+  <h3>Xuất báo giá</h3>
+  <div class="row"><button type="button" class="btn pri" id="dl-pdf"${DL?'':' hidden'}>Tải báo giá PDF</button><button type="button" class="btn" id="dl-xlsx"${DL?'':' hidden'}>Tải bảng Excel</button><button type="button" class="btn" id="dl-print">In báo giá</button></div>
+  <div class="sub" id="dl-msg" role="status" style="margin-top:8px">${DL===null?'':'Bản PDF gồm thông tin khách hàng, cấu hình thang, chi tiết hạng mục và điều kiện, tải thẳng về máy.'}</div>`;
+}
+
+/* ---------- Tóm tắt ---------- */
+function sumHtml(){
+  const c=calc();
+  return `<h2>Tóm tắt giá</h2>
+  ${c.lines.map(l=>`<div class="ln"><span>${esc(l.n)}</span><span class="v ${l.v<0?'neg':''}">${sgn(l.v)}</span><small>${esc(l.s)}</small></div>`).join('')}
+  <div class="tot">
+   <div class="r"><span>Giá mỗi thang</span><span>${fmt(c.per)} đ</span></div>
+   ${S.qty>1?`<div class="r"><span>× ${S.qty} thang</span><span>${fmt(c.gross)} đ</span></div>`:''}
+   ${c.disc?`<div class="r"><span>Chiết khấu sản lượng (${c.tier} triệu × ${S.qty})</span><span>−${fmt(c.disc)} đ</span></div>`:''}
+   ${S.markup?`<div class="r"><span>Điều chỉnh ${S.markup}%</span><span>${sgn(c.mk)} đ</span></div>`:''}
+   <div class="r g"><span>Tổng</span><span>${fmt(c.total)} đ</span></div>
+  </div>
+  <div class="sumbtns"><button class="btn pri" type="button" id="save-q"${DB?'':' hidden'}>${S.qid?'Cập nhật báo giá':'Lưu báo giá'}</button><button class="btn" type="button" id="copy">Sao chép nội dung</button></div>
+  ${S.qid?`<div class="ln" style="margin-top:10px"><span>Mã báo giá</span><span class="v" style="font-weight:600">${esc(S.qid)}</span><small><button class="btn" type="button" id="copy-id" style="padding:4px 10px;font-weight:500">Sao chép mã</button> <button class="btn" type="button" id="copy-code" style="padding:4px 10px;font-weight:500">Sao chép mã chia sẻ</button></small></div>`:''}
+  <details class="syncbox" style="margin:10px 0"><summary style="cursor:pointer;font-weight:600">Đồng bộ Google Sheet${syncCfg().u?' (đã cài)':''}</summary>
+    <div class="form" style="margin-top:8px"><label>Tên sale (tên tab trong Sheet)<input type="text" id="sync-sale" value="${esc(syncCfg().sale||'')}" placeholder="Ví dụ: Nguyen Van A"></label>
+    <label>Mã cài đặt (do quản lý cung cấp)<input type="text" id="sync-code" value="" placeholder="${syncCfg().u?'Đã cài. Dán mã mới để thay.':'Dán mã bắt đầu bằng CFG1.'}" autocomplete="off"></label></div>
+    <div class="row" style="margin-top:6px"><button class="btn" type="button" id="sync-save">Lưu cài đặt</button><button class="btn" type="button" id="sync-now">Gửi báo giá này lên Sheet</button></div>
+    <div class="sub" id="sync-msg" role="status" style="margin-top:6px"></div>
+    <details style="margin-top:8px"><summary style="cursor:pointer">Dành cho quản lý: tạo mã cài đặt</summary><div class="form" style="margin-top:6px"><label>Link Web app (Apps Script)<input type="text" id="gen-url" placeholder="https://script.google.com/macros/s/…/exec"></label><label>Mã truy cập (ACCESS_KEY)<input type="text" id="gen-key"></label></div><div class="row" style="margin-top:6px"><button class="btn" type="button" id="gen-btn">Tạo mã cài đặt</button></div><textarea id="gen-out" readonly rows="3" style="width:100%;margin-top:6px" placeholder="Mã cài đặt sẽ hiện ở đây, gửi cho sale"></textarea></details></details>
+  <div class="sub" id="q-msg" style="margin-top:6px" role="status"></div>
+  <div class="sub" id="copied" style="margin-top:6px" role="status"></div>`;
+}
+function quoteText(){
+  const c=calc();const L=[];
+  L.push('BÁO GIÁ THANG MÁY – VPTECH HÀ NAM (giá 2026, đã gồm VAT, giao tại nhà máy)');if(S.qid)L.push('Mã báo giá: '+S.qid);
+  if(S.cust.name)L.push('Khách hàng: '+S.cust.name);if(S.cust.proj)L.push('Công trình: '+S.cust.proj);if(S.cust.contact)L.push('Liên hệ: '+S.cust.contact);
+  L.push('');c.lines.forEach((l,i)=>L.push(`${i+1}. ${l.n} (${l.s}): ${sgn(l.v)} đ`));
+  L.push('');L.push('Giá mỗi thang: '+fmt(c.per)+' đ');
+  if(S.qty>1)L.push(`Số lượng: ${S.qty} thang = ${fmt(c.gross)} đ`);
+  if(c.disc)L.push('Chiết khấu sản lượng: −'+fmt(c.disc)+' đ');
+  if(S.markup)L.push(`Điều chỉnh ${S.markup}%: ${sgn(c.mk)} đ`);
+  L.push('TỔNG: '+fmt(c.total)+' đ');
+  L.push('');L.push('Thanh toán: 40% khi ký, phần còn lại trong 7 ngày sau khi xuất kho. Giao hàng nhanh nhất 15 ngày. Bảo hành 12 tháng.');
+  return L.join('\n');
+}
+
+/* ---------- Vẽ lại ---------- */
+function renderNav(){$('#nav').innerHTML=STEPS.map((s,i)=>`<button type="button" data-step="${i}" class="${i===S.step?'on':i<S.step?'done':''}"><span class="n">${i+1}</span>${s}</button>`).join('')}
+function renderMain(){
+  $('#main').innerHTML=stepHtml(S.step)+`<div class="nav2">${S.step>0?'<button type="button" class="btn" data-act="prev">Quay lại</button>':'<span></span>'}${S.step<STEPS.length-1?'<button type="button" class="btn pri" data-act="next">Tiếp tục: '+STEPS[S.step+1]+'</button>':''}</div>`;
+}
+function renderSum(){$('#sum').innerHTML=sumHtml()}
+function render(){normalize();renderNav();renderMain();renderSum();save()}
+
+document.addEventListener('click',e=>{
+  const qs=e.target.closest('[data-qstep]');if(qs){e.preventDefault();const id=qs.dataset.qstep;S.sel[id]=Math.max(1,(S.sel[id]||1)+ +qs.dataset.d);const y=window.scrollY;renderMain();renderSum();save();window.scrollTo(0,y);return}
+  const st=e.target.closest('[data-step]');if(st){S.step=+st.dataset.step;render();window.scrollTo({top:0});return}
+  const b=e.target.closest('[data-act]');
+  if(b){const a=b.dataset.act,v=b.dataset.v;
+    if(a==='type'){S.type=v;S.sel={};S.cabKind='normal';S.doorGlass=false;S.vgG='';S.vgM='';S.doorKind='';S.cabMode='zone';S.brand=null;S.load=null;S.speed=null;S.door=null}
+    else if(a==='stops'){S.stops=Math.max(2,Math.min(9,S.stops+ +v));for(const id in S.sel){const it=byId[id];if(defQty(it)!==1&&(it.unit==='Stop'||it.cat==='baoche'||it.cat==='cua'||/^Butong tầng/.test(it.name)))S.sel[id]=defQty(it)}}
+    else if(a==='dkind')S.doorKind=v;
+    else if(a==='inox'){S.inox=v;S.inox1=false}
+    else if(a==='doorkind'){S.doorGlass=v==='glass';ITEMS.filter(i=>i.cat==='cua').forEach(i=>delete S.sel[i.id])}
+    else if(a==='glassn'){S.glassN=+v}
+    else if(a==='glassf'){S.glassF=v}
+    else if(a==='cuaday'){delete S.sel.cua73;delete S.sel.cua74;if(v)S.sel[v]=1}
+    else if(a==='cabkind'){S.cabKind=v;if(v!=='glass')ITEMS.filter(i=>i.cat==='cua'&&/kính cường lực/.test(i.name)).forEach(i=>delete S.sel[i.id]);['combo','vlon','vgoc1','vgoc2','vgoc3','vkinh','vday','doitrong'].forEach(c=>ITEMS.filter(i=>i.cat===c).forEach(i=>delete S.sel[i.id]));S.vgG='';S.vgM=''}
+    else if(a==='load')S.load=+v;
+    else if(a==='speed'){S.speed=+v}
+    else if(a==='door')S.door=+v;
+    else if(a==='next'){S.step=Math.min(STEPS.length-1,S.step+1);render();window.scrollTo({top:0});return}
+    else if(a==='prev'){S.step=Math.max(0,S.step-1);render();window.scrollTo({top:0});return}
+    render();return}
+  if(e.target.id==='save-q'){saveQuote();return}
+  if(e.target.id==='open-btn'){openQuote();return}
+  if(e.target.id==='copy-code'){copyText(shareCode(),$('#q-msg'),'Đã sao chép mã chia sẻ. Gửi mã này cho người khác, họ dán vào ô "Nhập mã" để mở lại báo giá.');return}
+  if(e.target.id==='copy-id'){copyText(S.qid,$('#q-msg'),'Đã sao chép mã '+S.qid+'.');return}
+  if(e.target.id==='dl-pdf'){exportPdf();return}
+  if(e.target.id==='dl-print'){exportPrint();return}
+  if(e.target.id==='gen-btn'){const u=$('#gen-url').value.trim(),k=$('#gen-key').value.trim();$('#gen-out').value=(u&&k)?'CFG1.'+b64e(JSON.stringify({u,k})):'Nhập đủ link và mã truy cập.';return}
+  if(e.target.id==='sync-save'){const m=$('#sync-msg'),cfg=syncCfg(),sale=$('#sync-sale').value.trim(),code=$('#sync-code').value.trim();
+    if(code){const o=decodeSetup(code);if(!o){m.textContent='Mã cài đặt không hợp lệ.';return}cfg.u=o.u;cfg.k=o.k}
+    if(!cfg.u){m.textContent='Chưa có mã cài đặt.';return}
+    if(!sale){m.textContent='Nhập tên sale.';return}
+    cfg.sale=sale;syncCfgSave(cfg);m.textContent='Đã lưu cài đặt. Từ nay mỗi lần bấm Lưu báo giá sẽ tự gửi lên Sheet.';syncFlush();return}
+  if(e.target.id==='sync-now'){const m=$('#sync-msg');if(!syncCfg().u){m.textContent='Hãy lưu cài đặt trước.';return}
+    saveQuote();if(S.qid)syncSend(S.qid,m);return}
+  if(e.target.id==='dl-xlsx'){exportXlsx();return}
+  if(e.target.id==='reset'){S=JSON.parse(JSON.stringify(DEF));render();return}
+  if(e.target.id==='copy'){const t=quoteText(),m=$('#copied');
+    const ok=()=>{m.textContent='Đã sao chép báo giá.'};
+    const fb=()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy')?ok():m.textContent='Không sao chép được, hãy chọn và copy thủ công.'}catch(_){m.textContent='Không sao chép được.'}ta.remove()};
+    try{navigator.clipboard.writeText(t).then(ok,fb)}catch(_){fb()}}
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset.ck){S.cabKind=t.dataset.ck;if(S.cabKind!=='glass')ITEMS.filter(i=>i.cat==='cua'&&/kính cường lực/.test(i.name)).forEach(i=>delete S.sel[i.id]);['combo','vlon','vgoc1','vgoc2','vgoc3','vkinh','vday','doitrong'].forEach(c=>ITEMS.filter(i=>i.cat===c).forEach(i=>delete S.sel[i.id]));S.vgG='';S.vgM='';const y=window.scrollY;renderMain();renderSum();save();window.scrollTo(0,y);return}
+  if(t.dataset.cab){const m=t.dataset.cab;
+    if(m==='combo'){['vlon','vgoc1','vgoc2','vgoc3','vkinh','vday','trangia','tayvin','mathang','opdong'].forEach(c=>ITEMS.filter(i=>i.cat===c).forEach(i=>delete S.sel[i.id]));butCab().forEach(i=>delete S.sel[i.id]);S.vgG='';S.vgM=''}
+    else ITEMS.filter(i=>i.cat==='combo').forEach(i=>delete S.sel[i.id]);
+    S.cabMode=m;const y=window.scrollY;renderMain();renderSum();save();window.scrollTo(0,y);return}
+  if(t.dataset.dk!==undefined){S.doorKind=t.dataset.dk;const y=window.scrollY;renderMain();renderSum();save();window.scrollTo(0,y);return}
+  if(t.dataset.vg){if(t.dataset.vg==='g'){S.vgG=t.value;const ms=S.vgG?vgMids(S.vgG):[];if(!ms.includes(S.vgM))S.vgM=ms.length===1?ms[0]:''}else S.vgM=t.value;
+    vgApply();const y=window.scrollY;renderMain();renderSum();save();window.scrollTo(0,y);return}
+  if(t.dataset.single){const ids=ITEMS.filter(i=>GROUPS[t.dataset.single].includes(i.cat)).map(i=>i.id);
+    ids.forEach(id=>delete S.sel[id]);if(t.value)S.sel[t.value]=1;
+    if(t.dataset.single==='mk'){const tu=ITEMS.find(i=>i.cat==='tudieu');
+      if(t.value&&byId[t.value].pack){delete S.sel[tu.id];S.autoTu=false}
+      else if(t.value){S.sel[tu.id]=1;S.autoTu=true}
+      else if(S.autoTu){delete S.sel[tu.id];S.autoTu=false}}
+    if(t.dataset.single==='td'){S.autoTu=false;if(t.value)ITEMS.filter(i=>i.pack).forEach(i=>delete S.sel[i.id])}const y=window.scrollY;renderMain();renderSum();save();window.scrollTo(0,y);return}
+  if(t.dataset.id){if(t.checked)S.sel[t.dataset.id]=defQty(byId[t.dataset.id]);else delete S.sel[t.dataset.id];
+    const y=window.scrollY;renderMain();renderSum();save();window.scrollTo(0,y);return}
+  if(t.dataset.qty){S.sel[t.dataset.qty]=Math.max(1,Math.round(+t.value||1));renderSum();save();return}
+  if(t.dataset.flag){S[t.dataset.flag]=t.checked;const y=window.scrollY;renderMain();renderSum();save();window.scrollTo(0,y);return}
+  if(t.dataset.san){S.san=t.dataset.san;const y=window.scrollY;renderMain();renderSum();save();window.scrollTo(0,y)}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='open-id')openQuote()});
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='q-vach'){const q=t.value.trim().toLowerCase();document.querySelectorAll('#vach-wrap .it[data-name]').forEach(r=>{r.hidden=!!q&&!r.dataset.name.includes(q)});return}
+  const m={'c-name':['cust','name'],'c-proj':['cust','proj'],'c-contact':['cust','contact']}[t.id];
+  if(m){S.cust[m[1]]=t.value;save();return}
+  if(t.id==='f-qty'){S.qty=Math.max(1,Math.round(+t.value||1));renderSum();save()}
+  if(t.id==='f-annual'){S.annual=Math.max(0,Math.round(+t.value||0));renderSum();save()}
+  if(t.id==='f-mk'){S.markup=+t.value||0;renderSum();save()}
+});
+render();refreshList();syncFlush();
+</script>
+<div id="print-area" aria-hidden="true"></div>
+</body></html>
